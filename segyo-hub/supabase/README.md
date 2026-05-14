@@ -27,6 +27,10 @@ Supabase Studio → **SQL Editor** 에서 `migrations/` 폴더의 SQL 파일을 
 - `0001_profiles.sql` — profiles 테이블 + RLS + RPC
 - 이후 `0002_*.sql`, `0003_*.sql` 가 추가되면 같은 방식으로 차례대로 실행
 
+성공하면 Supabase → Table Editor 에서 `profiles` 테이블이 보입니다.
+
+이 SQL은 재실행에 안전하도록 작성됐어요. 문제가 생기면 같은 SQL을 다시 Run해도 됩니다.
+
 ## 4) admin 시드
 
 1. Supabase Studio → **Authentication → Users** 에서 본인 계정을 Email로 생성 (또는 OAuth 로그인 후 자동 생성된 row 확인)
@@ -46,7 +50,8 @@ where id = '<your-uuid>';
 Supabase CLI로 TypeScript 타입을 생성하려면:
 
 ```bash
-npx supabase gen types typescript --project-id <your-project-ref> > types/database.ts
+cd segyo-hub
+npx supabase gen types typescript --project-id <your-project-id> > types/database.ts
 ```
 
 타입이 없는 동안은 호출부에서 `any` 캐스트로 임시 대응합니다.

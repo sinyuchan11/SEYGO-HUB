@@ -1,8 +1,11 @@
--- Role enum
-create type user_role as enum ('pending', 'member', 'moderator', 'admin', 'banned');
+-- Role enum (idempotent: ignore if already exists)
+do $$ begin
+  create type user_role as enum ('pending', 'member', 'moderator', 'admin', 'banned');
+exception when duplicate_object then null;
+end $$;
 
 -- Profile table (1:1 with auth.users)
-create table public.profiles (
+create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   nickname text unique,
   role user_role not null default 'pending',
@@ -39,6 +42,7 @@ begin
 end;
 $$;
 
+drop trigger if exists profiles_touch_updated_at on public.profiles;
 create trigger profiles_touch_updated_at
   before update on public.profiles
   for each row execute function public.touch_updated_at();
@@ -47,11 +51,13 @@ create trigger profiles_touch_updated_at
 alter table public.profiles enable row level security;
 
 -- 본인 row 읽기
+drop policy if exists "profiles_self_select" on public.profiles;
 create policy "profiles_self_select"
   on public.profiles for select
   using (auth.uid() = id);
 
 -- 멤버 이상은 다른 멤버의 닉네임/role 조회 가능 (작성자 표시용)
+drop policy if exists "profiles_member_select" on public.profiles;
 create policy "profiles_member_select"
   on public.profiles for select
   using (
@@ -62,6 +68,7 @@ create policy "profiles_member_select"
   );
 
 -- 본인 닉네임/학년반 수정 (role/timeout은 X)
+drop policy if exists "profiles_self_update" on public.profiles;
 create policy "profiles_self_update"
   on public.profiles for update
   using (auth.uid() = id)
