@@ -1,13 +1,11 @@
 import 'server-only'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
-
-const PLACEHOLDER_URL = 'http://placeholder.supabase.co'
-const PLACEHOLDER_KEY = 'placeholder-service-role-key'
+import { PLACEHOLDER_SERVICE_KEY, PLACEHOLDER_URL } from './config'
 
 export function createServiceClient() {
   return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL || PLACEHOLDER_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY || PLACEHOLDER_KEY,
+    process.env.SUPABASE_SERVICE_ROLE_KEY || PLACEHOLDER_SERVICE_KEY,
     { auth: { persistSession: false } },
   )
 }
