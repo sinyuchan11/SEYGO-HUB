@@ -1,10 +1,12 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import type { User } from '@supabase/supabase-js'
 import {
   PLACEHOLDER_URL,
   PLACEHOLDER_ANON_KEY,
   isSupabaseConfigured,
 } from '@/lib/supabase/config'
+import type { UserRole } from '@/lib/permissions'
 
 const PUBLIC_PATHS = ['/login', '/signup']
 const PENDING_ALLOWED = ['/pending']
@@ -18,7 +20,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next({ request })
   }
 
-  // If Supabase isn't configured (placeholder keys), let everything through.
+  // If Supabase env vars aren't set, let everything through.
   // The app shell will render; calls to Supabase will fail at the page level.
   if (!isSupabaseConfigured()) {
     return NextResponse.next({ request })
@@ -41,7 +43,7 @@ export async function proxy(request: NextRequest) {
     },
   )
 
-  let user
+  let user: User | null = null
   try {
     const { data } = await supabase.auth.getUser()
     user = data.user
@@ -63,7 +65,7 @@ export async function proxy(request: NextRequest) {
   }
 
   // role과 nickname 조회
-  let profile: { role: string; nickname: string | null } | null = null
+  let profile: { role: UserRole; nickname: string | null } | null = null
   try {
     const { data } = await supabase
       .from('profiles')
@@ -72,6 +74,9 @@ export async function proxy(request: NextRequest) {
       .single()
     profile = data
   } catch (err) {
+    // TODO(phase-2): consider redirecting to /pending here. Falling open is
+    // acceptable for Phase 1 but lets a transient lookup failure expose protected
+    // pages to a pending/banned user until the next request.
     console.error('[proxy] profile lookup failed:', err)
     return response
   }
@@ -80,13 +85,13 @@ export async function proxy(request: NextRequest) {
 
   // pending → /pending 외엔 차단
   if (profile.role === 'pending') {
-    if (PENDING_ALLOWED.includes(pathname) || pathname === '/pending') return response
+    if (PENDING_ALLOWED.includes(pathname)) return response
     return NextResponse.redirect(new URL('/pending', request.url))
   }
 
   // banned → /pending (별도 메시지)
   if (profile.role === 'banned') {
-    if (pathname === '/pending') return response
+    if (PENDING_ALLOWED.includes(pathname)) return response
     return NextResponse.redirect(new URL('/pending', request.url))
   }
 
