@@ -10,10 +10,10 @@ const PUBLIC_PATHS = ['/login', '/signup']
 const PENDING_ALLOWED = ['/pending']
 const ONBOARDING_PATH = '/onboarding'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Static assets and auth API routes — bypass middleware entirely.
+  // Static assets and auth API routes — bypass proxy entirely.
   if (pathname.startsWith('/_next') || pathname.startsWith('/api/auth')) {
     return NextResponse.next({ request })
   }
@@ -47,7 +47,7 @@ export async function middleware(request: NextRequest) {
     user = data.user
   } catch (err) {
     // Network or auth failure — allow the request through; UI will handle missing session.
-    console.error('[middleware] supabase.auth.getUser failed:', err)
+    console.error('[proxy] supabase.auth.getUser failed:', err)
     return response
   }
 
@@ -72,7 +72,7 @@ export async function middleware(request: NextRequest) {
       .single()
     profile = data
   } catch (err) {
-    console.error('[middleware] profile lookup failed:', err)
+    console.error('[proxy] profile lookup failed:', err)
     return response
   }
 
