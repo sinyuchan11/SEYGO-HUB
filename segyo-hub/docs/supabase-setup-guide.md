@@ -66,7 +66,7 @@ SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOi...(service_role secret 키)
 
 ## 4단계. 데이터베이스 마이그레이션 실행
 
-`supabase/migrations/` 폴더 안 SQL 5개를 **파일명 순서대로** Supabase에 적용합니다.
+`supabase/migrations/` 폴더 안 SQL 6개를 **파일명 순서대로 하나씩** 적용합니다. 절대 한꺼번에 붙여넣지 마세요. 순서가 어긋나면 뒤 파일이 앞 파일의 테이블을 참조 못 해 깨집니다.
 
 | 순서 | 파일 | 무엇을 만드는지 |
 |---|---|---|
@@ -75,19 +75,53 @@ SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOi...(service_role secret 키)
 | 3 | `0003_comments.sql` | 댓글(2단 깊이까지) |
 | 4 | `0004_reactions.sql` | 좋아요 |
 | 5 | `0005_notifications.sql` | 알림 + 자동 생성 트리거 |
+| 6 | `0006_fix_rls_recursion.sql` | RLS 정책 무한 재귀 fix (꼭 마지막에) |
 
-**실행 방법** — Supabase 대시보드에서:
+### 4-1. 로컬 SQL 파일을 띄우는 방법
 
-1. 좌측 사이드바 **SQL Editor** 클릭
-2. **+ New query** 클릭
-3. 로컬 `segyo-hub/supabase/migrations/0001_profiles.sql` 내용을 **전부 복사 → 붙여넣기**
-4. 우측 하단 초록 **Run** 버튼 (또는 Ctrl+Enter)
-5. 하단에 `Success. No rows returned` 비슷한 메시지가 뜨면 성공
-6. 같은 방식으로 0002 → 0003 → 0004 → 0005 까지 차례로 실행
+붙여넣기 전에 SQL 파일 내용을 안전하게 가져와야 합니다.
 
-> 한 SQL이 실패하면 메시지를 그대로 저에게 알려주세요. 마이그레이션 파일들은 재실행에 안전하게 작성되어 있어서 같은 파일을 다시 Run해도 OK입니다.
+1. VS Code(또는 메모장)에서 `segyo-hub/supabase/migrations/0001_profiles.sql` 열기
+2. **Ctrl+A** (전체 선택) → **Ctrl+C** (복사)
 
-**확인:** 좌측 **Table Editor** 들어가면 `profiles`, `posts`, `comments`, `reactions`, `notifications` 5개 테이블이 보여야 합니다.
+> 파일을 다 열어두고 위에서 아래로 하나씩 진행하면 헷갈리지 않아요.
+
+### 4-2. Supabase에서 한 번의 실행 사이클
+
+각 파일마다 **이 사이클을 반복**합니다 (총 6번):
+
+1. Supabase 대시보드 좌측 사이드바에서 **SQL Editor** 클릭
+2. 상단의 **+ New query** 버튼 클릭 (회색 빈 편집창이 열림)
+3. 그 편집창 안을 마우스로 한 번 클릭 → **Ctrl+V** 로 복사한 SQL 붙여넣기
+4. 우측 하단 초록색 **Run** 버튼 클릭 (또는 키보드 **Ctrl+Enter**)
+5. 하단 패널에 결과 메시지 확인:
+   - 초록 **Success**, `No rows returned`, 또는 결과 행이 뜨면 → 성공. 다음 파일로 진행.
+   - 빨간 에러 메시지 → 일단 **중단하고 에러 메시지를 그대로 복사**해서 알려주세요.
+
+> 매 파일마다 꼭 **+ New query** 로 새 창을 열어주세요. 같은 편집창에 계속 덮어쓰면 히스토리가 사라져서 뭐가 됐고 뭐가 안 됐는지 추적이 어려워집니다.
+
+### 4-3. 자주 만나는 에러 패턴
+
+**`relation "public.xxx" does not exist`**
+→ 순서가 어긋났어요. 0003을 건너뛰고 0005를 돌리면 `public.comments` 가 없다고 나옵니다. 빠진 번호를 먼저 실행하세요.
+
+**`42P17 infinite recursion detected in policy for relation "profiles"`**
+→ 0006이 아직 안 돌았어요. 0001~0005만 돌린 상태에서는 모든 SELECT가 이 에러를 받습니다. 0006을 실행하면 해결됩니다.
+
+**`policy "xxx" for table "yyy" already exists`**
+→ 같은 파일을 두 번 돌렸을 때 가끔 나옵니다. 무시하고 다음 파일로 진행 OK. 파일들은 재실행 안전(`drop ... if exists`, `create table if not exists`)하게 작성되어 있어서 같은 SQL을 다시 Run해도 데이터는 안 망가집니다.
+
+### 4-4. 끝났는지 확인
+
+좌측 사이드바 **Table Editor** 클릭 → 좌측에 다음 5개 테이블이 보이면 성공:
+
+- `profiles`
+- `posts`
+- `comments`
+- `reactions`
+- `notifications`
+
+추가로 **Database → Functions** 메뉴에서 `current_user_role`, `current_user_timeout_until`, `admin_set_role`, `mod_set_timeout`, `handle_new_user`, `notify_on_comment` 등이 보이면 0006까지 다 적용된 것입니다.
 
 ---
 
