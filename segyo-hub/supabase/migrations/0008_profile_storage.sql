@@ -25,4 +25,8 @@ create policy "profile_images_owner_update"
   using (
     bucket_id = 'profile-images'
     and (storage.foldername(name))[1] = auth.uid()::text
+  )
+  with check (
+    bucket_id = 'profile-images'
+    and (storage.foldername(name))[1] = auth.uid()::text
   );
