@@ -1,6 +1,8 @@
 import { cn } from '@/lib/cn'
 
-const sizeMap: Record<number, string> = {
+type AvatarSize = 24 | 32 | 40 | 64
+
+const sizeMap: Record<AvatarSize, string> = {
   24: 'h-6 w-6 text-[10px]',
   32: 'h-8 w-8 text-xs',
   40: 'h-10 w-10 text-sm',
@@ -10,7 +12,7 @@ const sizeMap: Record<number, string> = {
 export interface AvatarProps {
   name: string
   src?: string | null
-  size?: 24 | 32 | 40 | 64
+  size?: AvatarSize
   className?: string
 }
 
