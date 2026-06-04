@@ -33,7 +33,7 @@ returns table (
   post_count bigint, likes_received bigint
 )
 language plpgsql
-security definer set search_path = public
+stable security definer set search_path = public
 as $$
 #variable_conflict use_column
 begin
