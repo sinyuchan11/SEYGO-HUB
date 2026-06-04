@@ -37,8 +37,9 @@ security definer set search_path = public
 as $$
 #variable_conflict use_column
 begin
-  if auth.uid() <> target_id
-     and public.current_user_role() not in ('member','moderator','admin') then
+  if auth.uid() is null
+     or (auth.uid() <> target_id
+         and public.current_user_role() not in ('member','moderator','admin')) then
     raise exception 'forbidden';
   end if;
 
