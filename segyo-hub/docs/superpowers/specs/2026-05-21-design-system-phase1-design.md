@@ -72,7 +72,8 @@ Defined in `app/globals.css` via Tailwind 4's `@theme` directive:
 - success `#10B981`, warning `#F59E0B`, danger `#EF4444`, info `#3B82F6`
 
 **Typography:**
-- Stack: `'Pretendard', var(--font-geist-sans), system-ui, sans-serif`
+- Stack: `'Pretendard', system-ui, -apple-system, sans-serif`
+  - NOTE: the existing `globals.css` references `var(--font-geist-sans)` / `var(--font-geist-mono)`, but the root layout never sets up Geist via `next/font`, so those vars are undefined. A `var()` with no fallback that resolves to nothing invalidates the whole `font-family` declaration — so the new stack must NOT reference the Geist vars. Remove the dangling Geist `--font-*` lines from `@theme` as part of this work.
 - Display 36 semi · H2 24 semi · H3 18 medium · Body 14 regular · Caption 12 regular
 - Body 14 is the default for posts, comments, labels
 
@@ -146,7 +147,7 @@ lib/
 
 ## Migration approach
 
-- Pages' content code is **not modified**. Only outer page-level `<header>Segyo Hub</header>` wrappers are removed, since the shell now owns chrome.
+- Pages' content code is **not modified**. The only header removed is the app-chrome header in `app/(app)/layout.tsx` (`<header>…Segyo Hub…<NotificationBell/></header>`), since `AppShell`/`TopBar` now own the chrome. **Page-level section headers stay** — e.g. the `<header>` in `post/new/page.tsx` ("새 글") and `admin/users/page.tsx` are contextual page titles, not app chrome; restyle them but do not delete.
 - Inside-page raw `<div>` / `<button>` markup is replaced with `<Card>` / `<Button>` opportunistically in this phase — one pass only. Full uniformity comes in Phase 3.
 - The current `globals.css` `--background` / `--foreground` variables are replaced by the new token system. The existing `prefers-color-scheme: dark` block is removed for Phase 1 — dark mode returns once tokens stabilize.
 
@@ -161,7 +162,7 @@ clsx
 tailwind-merge
 ```
 
-Pretendard is loaded via CDN `@font-face` in `globals.css` (no npm dep needed).
+Pretendard is loaded via the official CDN stylesheet `@import` at the top of `globals.css` (before `@import "tailwindcss"` per CSS `@import` ordering rules), or via `@font-face`. No npm dep needed. The root `app/layout.tsx` body className keeps `bg-gray-50 text-gray-900` until tokens replace them; align it with the new `canvas`/`foreground` tokens.
 
 ## Verification
 
