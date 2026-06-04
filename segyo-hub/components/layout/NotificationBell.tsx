@@ -49,7 +49,7 @@ export function NotificationBell() {
       >
         🔔
         {unread > 0 && (
-          <span className="absolute -right-1 -top-1 grid min-h-[18px] min-w-[18px] place-items-center rounded-full bg-red-600 px-1 text-[10px] text-white">
+          <span className="absolute -right-1 -top-1 grid min-h-[18px] min-w-[18px] place-items-center rounded-full bg-danger px-1 text-[10px] text-white">
             {unread > 9 ? '9+' : unread}
           </span>
         )}
@@ -58,7 +58,7 @@ export function NotificationBell() {
         <div className="absolute right-0 top-full z-20 mt-2 w-72 rounded border bg-white shadow">
           <div className="flex items-center justify-between border-b px-3 py-2">
             <span className="text-sm font-medium">알림</span>
-            <button onClick={markRead} className="text-xs text-blue-600">
+            <button onClick={markRead} className="text-xs text-primary-600">
               모두 읽음
             </button>
           </div>
@@ -70,7 +70,7 @@ export function NotificationBell() {
               <li
                 key={n.id}
                 className={`cursor-pointer border-b px-3 py-2 text-sm ${
-                  n.read_at === null ? 'bg-blue-50' : ''
+                  n.read_at === null ? 'bg-primary-50' : ''
                 }`}
                 onClick={() => {
                   setOpen(false)
