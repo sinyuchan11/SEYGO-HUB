@@ -27,9 +27,9 @@ export default async function BoardPage() {
 
   return (
     <main>
-      <div className="flex items-center justify-between border-b bg-white px-4 py-3">
+      <div className="flex items-center justify-between border-b border-border bg-surface px-4 py-3">
         <h2 className="font-bold">자유 게시판</h2>
-        <Link href="/post/new" className="rounded bg-blue-600 px-3 py-1 text-sm text-white">
+        <Link href="/post/new" className="rounded-lg bg-primary-600 px-3 py-1 text-sm text-white">
           새 글
         </Link>
       </div>
