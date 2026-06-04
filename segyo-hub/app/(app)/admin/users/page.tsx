@@ -37,7 +37,7 @@ export default async function AdminUsersPage() {
   }))
 
   return (
-    <main>
+    <div>
       <header className="border-b border-border bg-surface px-4 py-3">
         <h2 className="font-bold">사용자 관리</h2>
         <p className="text-xs text-gray-500">
@@ -47,6 +47,6 @@ export default async function AdminUsersPage() {
         </p>
       </header>
       <UserTable rows={rows} currentUserId={user.id} />
-    </main>
+    </div>
   )
 }

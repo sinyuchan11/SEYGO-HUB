@@ -17,7 +17,7 @@ export function LeftRail() {
   return (
     <TooltipProvider delayDuration={200}>
       <nav className="hidden shrink-0 py-2 md:block">
-        <ul className="sticky top-20 flex w-16 flex-col items-center gap-1 rounded-lg border border-border bg-surface py-3">
+        <ul className="sticky top-16 flex w-16 flex-col items-center gap-1 rounded-lg border border-border bg-surface py-3">
           {items.map((item) => {
             const active =
               item.href === '/'

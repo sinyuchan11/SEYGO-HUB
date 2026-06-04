@@ -14,7 +14,7 @@ export function RightRail({
 }) {
   return (
     <aside className={cn('hidden w-[280px] shrink-0 py-2 xl:block', className)}>
-      <div className="sticky top-20 flex flex-col gap-2">{children}</div>
+      <div className="sticky top-16 flex flex-col gap-2">{children}</div>
     </aside>
   )
 }

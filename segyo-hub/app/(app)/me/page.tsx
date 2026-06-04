@@ -23,7 +23,7 @@ export default async function MePage() {
   const showAdmin = profile?.role === 'admin' || profile?.role === 'moderator'
 
   return (
-    <main className="px-4 py-6">
+    <div className="px-4 py-6">
       <h2 className="text-lg font-bold">내 정보</h2>
       <dl className="mt-4 space-y-2 text-sm">
         <div className="flex justify-between border-b pb-2">
@@ -51,6 +51,6 @@ export default async function MePage() {
       <form action={logout} className="mt-4">
         <button className="w-full rounded border py-2 text-red-600">로그아웃</button>
       </form>
-    </main>
+    </div>
   )
 }

@@ -26,7 +26,7 @@ export default async function BoardPage() {
   }
 
   return (
-    <main>
+    <div>
       <div className="flex items-center justify-between border-b border-border bg-surface px-4 py-3">
         <h2 className="font-bold">자유 게시판</h2>
         <Link href="/post/new" className="rounded-lg bg-primary-600 px-3 py-1 text-sm text-white">
@@ -53,6 +53,6 @@ export default async function BoardPage() {
           </li>
         )}
       </ul>
-    </main>
+    </div>
   )
 }
