@@ -13,6 +13,7 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   tone?: Tone
 }
 
+/** Small status/count label. `tone`: neutral | primary | danger | success. */
 export function Badge({ tone = 'neutral', className, ...props }: BadgeProps) {
   return (
     <span

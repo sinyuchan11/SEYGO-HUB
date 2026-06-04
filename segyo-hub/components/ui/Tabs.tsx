@@ -3,6 +3,7 @@
 import * as TabsPrimitive from '@radix-ui/react-tabs'
 import { cn } from '@/lib/cn'
 
+/** Tab navigation built on Radix Tabs. Compose: Tabs > TabsList > TabsTrigger, TabsContent. */
 export const Tabs = TabsPrimitive.Root
 
 export function TabsList({

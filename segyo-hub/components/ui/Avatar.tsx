@@ -16,6 +16,7 @@ export interface AvatarProps {
   className?: string
 }
 
+/** User avatar showing an image, or the name's first character as fallback. `size`: 24 | 32 | 40 | 64. */
 export function Avatar({ name, src, size = 32, className }: AvatarProps) {
   const initial = name.trim().charAt(0) || '?'
   return (

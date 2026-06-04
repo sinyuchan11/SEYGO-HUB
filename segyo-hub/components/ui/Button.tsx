@@ -21,6 +21,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   size?: Size
 }
 
+/** Primary action button. `variant`: primary | secondary | ghost | danger. `size`: sm | md | lg. */
 export function Button({
   variant = 'primary',
   size = 'md',

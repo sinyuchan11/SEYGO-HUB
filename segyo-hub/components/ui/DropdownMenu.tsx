@@ -3,6 +3,7 @@
 import * as Menu from '@radix-ui/react-dropdown-menu'
 import { cn } from '@/lib/cn'
 
+/** Dropdown menu built on Radix. Compose: DropdownMenu > DropdownMenuTrigger, DropdownMenuContent > DropdownMenuItem. */
 export const DropdownMenu = Menu.Root
 export const DropdownMenuTrigger = Menu.Trigger
 

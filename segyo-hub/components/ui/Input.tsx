@@ -1,5 +1,6 @@
 import { cn } from '@/lib/cn'
 
+/** Text input styled with design tokens and a primary focus ring. */
 export const Input = ({
   className,
   ...props

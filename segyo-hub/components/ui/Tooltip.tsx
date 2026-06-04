@@ -5,6 +5,7 @@ import { cn } from '@/lib/cn'
 
 export const TooltipProvider = TooltipPrimitive.Provider
 
+/** Tooltip built on Radix. Wrap a trigger element; pass `label` and optional `side`. Requires a TooltipProvider ancestor. */
 export function Tooltip({
   label,
   children,

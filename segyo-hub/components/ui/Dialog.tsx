@@ -3,6 +3,7 @@
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { cn } from '@/lib/cn'
 
+/** Modal dialog built on Radix. Compose: Dialog > DialogTrigger, DialogContent > DialogTitle/DialogDescription. */
 export const Dialog = DialogPrimitive.Root
 export const DialogTrigger = DialogPrimitive.Trigger
 export const DialogClose = DialogPrimitive.Close
