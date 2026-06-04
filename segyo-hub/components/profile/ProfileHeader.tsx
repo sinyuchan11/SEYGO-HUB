@@ -16,7 +16,7 @@ export function ProfileHeader({
         style={
           profile.cover_url
             ? {
-                backgroundImage: `url(${profile.cover_url})`,
+                backgroundImage: `url("${profile.cover_url}")`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
               }
