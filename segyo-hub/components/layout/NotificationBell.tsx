@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { timeAgo } from '@/lib/time'
 
 type Notif = {
   id: number
@@ -80,8 +81,8 @@ export function NotificationBell() {
                 {n.kind === 'comment_on_post'
                   ? '내 글에 새 댓글이 달렸어요'
                   : '내 댓글에 답글이 달렸어요'}
-                <p className="mt-0.5 text-xs text-gray-500">
-                  {new Date(n.created_at).toLocaleString('ko-KR')}
+                <p className="mt-0.5 text-xs text-gray-500" suppressHydrationWarning>
+                  {timeAgo(n.created_at)}
                 </p>
               </li>
             ))}

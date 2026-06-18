@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { timeAgo } from '@/lib/time'
 
 export type CommentNode = {
   id: number
@@ -64,7 +65,7 @@ function CommentBlock({
       <div className="flex gap-2 text-xs text-gray-500">
         {reply && <span>↳</span>}
         <span className="font-medium text-gray-700">{author}</span>
-        <span>{new Date(c.createdAt).toLocaleString('ko-KR')}</span>
+        <span suppressHydrationWarning>{timeAgo(c.createdAt)}</span>
       </div>
       <p className="mt-1 whitespace-pre-wrap text-sm">{c.content}</p>
       {actions && <div className="mt-1">{actions}</div>}

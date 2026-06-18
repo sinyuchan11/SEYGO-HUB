@@ -5,6 +5,14 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { CommentTree, type CommentNode } from '@/components/comment/CommentTree'
 import { LikeButton } from '@/components/reactions/LikeButton'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/DropdownMenu'
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/Dialog'
+import { timeAgo } from '@/lib/time'
 import DOMPurify from 'isomorphic-dompurify'
 
 export type PostDetailData = {
@@ -29,7 +37,7 @@ export function PostDetail({ data }: { data: PostDetailData }) {
   const [text, setText] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [commentError, setCommentError] = useState<string | null>(null)
-  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
 
   async function submitComment() {
     if (!text.trim()) return
@@ -64,13 +72,63 @@ export function PostDetail({ data }: { data: PostDetailData }) {
     router.refresh()
   }
 
+  function goBack() {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back()
+    } else {
+      router.push('/board')
+    }
+  }
+
   return (
     <main>
+      {/* Back bar */}
+      <div className="sticky top-0 z-20 flex items-center border-b border-border bg-surface/90 px-2 py-2 backdrop-blur">
+        <button
+          type="button"
+          onClick={goBack}
+          aria-label="뒤로가기"
+          className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm font-medium text-foreground hover:bg-muted"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="m15 18-6-6 6-6" />
+          </svg>
+          뒤로
+        </button>
+      </div>
+
       <article className="border-b bg-white px-4 py-4">
-        <h1 className="text-lg font-bold">{data.title}</h1>
+        <div className="flex items-start justify-between gap-2">
+          <h1 className="text-lg font-bold">{data.title}</h1>
+          {(data.isMine || data.canModerate) && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="더보기"
+                  className="-mr-1 shrink-0 rounded-md p-1.5 text-muted-fg hover:bg-muted"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <circle cx="5" cy="12" r="1.6" />
+                    <circle cx="12" cy="12" r="1.6" />
+                    <circle cx="19" cy="12" r="1.6" />
+                  </svg>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem
+                  onSelect={() => setDeleteOpen(true)}
+                  className="text-danger data-[highlighted]:bg-danger/10"
+                >
+                  삭제
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
         <div className="mt-1 flex gap-2 text-xs text-gray-500">
           <span>{data.isAnonymous ? '익명' : (data.authorNickname ?? '?')}</span>
-          <span>{new Date(data.createdAt).toLocaleString('ko-KR')}</span>
+          <span suppressHydrationWarning>{timeAgo(data.createdAt)}</span>
         </div>
         <div
           className="post-content mt-3"
@@ -83,24 +141,39 @@ export function PostDetail({ data }: { data: PostDetailData }) {
             initialLiked={data.initialPostLiked}
             initialCount={data.initialPostLikeCount}
           />
-          {(data.isMine || data.canModerate) &&
-            (confirmingDelete ? (
-              <span className="flex items-center gap-2 text-xs">
-                <span className="text-muted-fg">삭제할까요?</span>
-                <button onClick={deletePost} className="font-medium text-danger">
-                  삭제
-                </button>
-                <button onClick={() => setConfirmingDelete(false)} className="text-muted-fg">
-                  취소
-                </button>
-              </span>
-            ) : (
-              <button onClick={() => setConfirmingDelete(true)} className="text-xs text-red-600">
-                삭제
-              </button>
-            ))}
         </div>
       </article>
+
+      {/* Delete confirmation */}
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent>
+          <DialogTitle className="text-base font-bold text-foreground">
+            이 글을 삭제할까요?
+          </DialogTitle>
+          <DialogDescription className="mt-1 text-sm text-muted-fg">
+            삭제하면 되돌릴 수 없어요.
+          </DialogDescription>
+          <div className="mt-5 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setDeleteOpen(false)}
+              className="rounded-lg bg-muted px-4 py-2 text-sm font-medium text-foreground hover:bg-border"
+            >
+              취소
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setDeleteOpen(false)
+                deletePost()
+              }}
+              className="rounded-lg bg-danger px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+            >
+              삭제
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <CommentTree
         comments={data.comments}
