@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { CommentTree, type CommentNode } from '@/components/comment/CommentTree'
 import { LikeButton } from '@/components/reactions/LikeButton'
+import DOMPurify from 'isomorphic-dompurify'
 
 export type PostDetailData = {
   id: number
@@ -69,7 +70,10 @@ export function PostDetail({ data }: { data: PostDetailData }) {
           <span>{data.isAnonymous ? '익명' : (data.authorNickname ?? '?')}</span>
           <span>{new Date(data.createdAt).toLocaleString('ko-KR')}</span>
         </div>
-        <p className="mt-3 whitespace-pre-wrap">{data.content}</p>
+        <div
+          className="post-content mt-3"
+          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(data.content, { USE_PROFILES: { html: true } }) }}
+        />
         <div className="mt-3 flex items-center gap-3">
           <LikeButton
             targetType="post"
