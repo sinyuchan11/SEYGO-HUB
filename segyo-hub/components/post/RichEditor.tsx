@@ -10,7 +10,7 @@ import Link from '@tiptap/extension-link'
 import Image from '@tiptap/extension-image'
 import TextAlign from '@tiptap/extension-text-align'
 import Placeholder from '@tiptap/extension-placeholder'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { cn } from '@/lib/cn'
 
 interface RichEditorProps {
@@ -48,6 +48,9 @@ function ToolbarButton({
 
 export function RichEditor({ value, onChange }: RichEditorProps) {
   const imageInputRef = useRef<HTMLInputElement>(null)
+  const [linkOpen, setLinkOpen] = useState(false)
+  const [linkUrl, setLinkUrl] = useState('')
+  const [uploadError, setUploadError] = useState<string | null>(null)
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -70,27 +73,45 @@ export function RichEditor({ value, onChange }: RichEditorProps) {
 
   if (!editor) return null
 
-  function setLink() {
-    const url = prompt('링크 URL을 입력하세요')
-    if (url) {
-      editor!.chain().focus().setLink({ href: url }).run()
+  // Open an inline URL editor (window.prompt is not supported in this runtime).
+  function openLinkEditor() {
+    const prev = editor!.getAttributes('link').href as string | undefined
+    setLinkUrl(prev ?? '')
+    setLinkOpen(true)
+  }
+
+  function applyLink() {
+    const url = linkUrl.trim()
+    if (!url) {
+      editor!.chain().focus().extendMarkRange('link').unsetLink().run()
+    } else {
+      const href = /^https?:\/\//i.test(url) ? url : `https://${url}`
+      editor!.chain().focus().extendMarkRange('link').setLink({ href }).run()
     }
+    setLinkOpen(false)
+    setLinkUrl('')
   }
 
   function unsetLink() {
-    editor!.chain().focus().unsetLink().run()
+    editor!.chain().focus().extendMarkRange('link').unsetLink().run()
   }
 
   async function handleImageFile(file: File) {
+    setUploadError(null)
     const form = new FormData()
     form.append('file', file)
-    const res = await fetch('/api/upload', { method: 'POST', body: form })
-    if (!res.ok) {
-      alert('이미지 업로드에 실패했습니다.')
-      return
+    try {
+      const res = await fetch('/api/upload', { method: 'POST', body: form })
+      if (!res.ok) {
+        const body = await res.json().catch(() => null)
+        setUploadError(body?.error ?? '이미지 업로드에 실패했습니다.')
+        return
+      }
+      const { url } = await res.json()
+      editor!.chain().focus().setImage({ src: url }).run()
+    } catch {
+      setUploadError('이미지 업로드 중 오류가 발생했습니다.')
     }
-    const { url } = await res.json()
-    editor!.chain().focus().setImage({ src: url }).run()
   }
 
   return (
@@ -233,7 +254,7 @@ export function RichEditor({ value, onChange }: RichEditorProps) {
         <ToolbarButton
           title="링크 추가"
           active={editor.isActive('link')}
-          onClick={setLink}
+          onClick={openLinkEditor}
         >
           🔗
         </ToolbarButton>
@@ -306,6 +327,49 @@ export function RichEditor({ value, onChange }: RichEditorProps) {
           ↪
         </ToolbarButton>
       </div>
+
+      {/* Inline link editor (replaces window.prompt) */}
+      {linkOpen && (
+        <div className="flex items-center gap-2 border-b border-border bg-canvas px-2 py-1.5">
+          <input
+            autoFocus
+            type="url"
+            placeholder="https://example.com"
+            value={linkUrl}
+            onChange={(e) => setLinkUrl(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                applyLink()
+              } else if (e.key === 'Escape') {
+                setLinkOpen(false)
+              }
+            }}
+            className="h-7 flex-1 rounded border border-border bg-surface px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-100"
+          />
+          <button
+            type="button"
+            onClick={applyLink}
+            className="h-7 rounded bg-primary-600 px-2.5 text-sm font-medium text-white hover:bg-primary-700"
+          >
+            적용
+          </button>
+          <button
+            type="button"
+            onClick={() => setLinkOpen(false)}
+            className="h-7 rounded px-2.5 text-sm text-foreground hover:bg-muted"
+          >
+            취소
+          </button>
+        </div>
+      )}
+
+      {/* Upload error */}
+      {uploadError && (
+        <p className="border-b border-border bg-danger/10 px-3 py-1.5 text-sm text-danger">
+          {uploadError}
+        </p>
+      )}
 
       {/* Editor surface */}
       <EditorContent editor={editor} className="min-h-[320px] px-4 py-3" />

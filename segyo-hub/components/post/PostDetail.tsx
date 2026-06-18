@@ -28,9 +28,12 @@ export function PostDetail({ data }: { data: PostDetailData }) {
   const [replyTo, setReplyTo] = useState<number | null>(null)
   const [text, setText] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [commentError, setCommentError] = useState<string | null>(null)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
 
   async function submitComment() {
     if (!text.trim()) return
+    setCommentError(null)
     setSubmitting(true)
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -46,7 +49,7 @@ export function PostDetail({ data }: { data: PostDetailData }) {
     })
     setSubmitting(false)
     if (error) {
-      alert(error.message)
+      setCommentError(error.message)
       return
     }
     setText('')
@@ -55,7 +58,6 @@ export function PostDetail({ data }: { data: PostDetailData }) {
   }
 
   async function deletePost() {
-    if (!confirm('정말 삭제할까요?')) return
     const supabase = createClient()
     await supabase.from('posts').update({ deleted_at: new Date().toISOString() }).eq('id', data.id)
     router.push('/board')
@@ -81,11 +83,22 @@ export function PostDetail({ data }: { data: PostDetailData }) {
             initialLiked={data.initialPostLiked}
             initialCount={data.initialPostLikeCount}
           />
-          {(data.isMine || data.canModerate) && (
-            <button onClick={deletePost} className="text-xs text-red-600">
-              삭제
-            </button>
-          )}
+          {(data.isMine || data.canModerate) &&
+            (confirmingDelete ? (
+              <span className="flex items-center gap-2 text-xs">
+                <span className="text-muted-fg">삭제할까요?</span>
+                <button onClick={deletePost} className="font-medium text-danger">
+                  삭제
+                </button>
+                <button onClick={() => setConfirmingDelete(false)} className="text-muted-fg">
+                  취소
+                </button>
+              </span>
+            ) : (
+              <button onClick={() => setConfirmingDelete(true)} className="text-xs text-red-600">
+                삭제
+              </button>
+            ))}
         </div>
       </article>
 
@@ -137,6 +150,7 @@ export function PostDetail({ data }: { data: PostDetailData }) {
             등록
           </button>
         </div>
+        {commentError && <p className="mt-1 text-xs text-danger">{commentError}</p>}
       </div>
     </main>
   )

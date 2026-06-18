@@ -16,11 +16,9 @@ export function UserTable({ rows, currentUserId }: { rows: Row[]; currentUserId:
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const [confirmDemotion, setConfirmDemotion] = useState<{ id: string; role: Row['role'] } | null>(null)
 
-  async function changeRole(id: string, role: Row['role']) {
-    if (id === currentUserId && role !== 'admin') {
-      if (!confirm('본인 권한을 낮추시겠어요? 이후엔 관리자 페이지에 못 들어와요.')) return
-    }
+  async function applyRole(id: string, role: Row['role']) {
     setError(null)
     const res = await fetch(`/api/admin/users/${id}/role`, {
       method: 'POST',
@@ -35,9 +33,40 @@ export function UserTable({ rows, currentUserId }: { rows: Row[]; currentUserId:
     startTransition(() => router.refresh())
   }
 
+  function changeRole(id: string, role: Row['role']) {
+    // Self-demotion is destructive — confirm inline (window.confirm is not
+    // supported in this runtime). The select stays bound to the current role,
+    // so cancelling needs no extra reset.
+    if (id === currentUserId && role !== 'admin') {
+      setConfirmDemotion({ id, role })
+      return
+    }
+    applyRole(id, role)
+  }
+
   return (
     <div className="overflow-x-auto">
       {error && <p className="px-4 py-2 text-sm text-red-600">{error}</p>}
+      {confirmDemotion && (
+        <div className="flex flex-wrap items-center gap-3 border-b border-warning/40 bg-warning/10 px-4 py-2 text-sm">
+          <span className="text-foreground">
+            본인 권한을 낮추시겠어요? 이후엔 관리자 페이지에 못 들어와요.
+          </span>
+          <button
+            onClick={() => {
+              const c = confirmDemotion
+              setConfirmDemotion(null)
+              applyRole(c.id, c.role)
+            }}
+            className="font-medium text-danger"
+          >
+            확인
+          </button>
+          <button onClick={() => setConfirmDemotion(null)} className="text-muted-fg">
+            취소
+          </button>
+        </div>
+      )}
       <table className="min-w-full text-sm">
         <thead className="bg-gray-100">
           <tr>
