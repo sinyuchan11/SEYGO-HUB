@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { PostListItem } from '@/components/post/PostListItem'
 import { extractThumb, toExcerpt } from '@/lib/postPreview'
+import { ZoomableImage } from '@/components/ui/ZoomableImage'
 
 type AuthorRel = { nickname: string | null; avatar_url: string | null } | null
 type PostRow = {
@@ -251,8 +252,7 @@ function InfoCard({
         <h4 className="text-sm font-bold text-foreground">{title}</h4>
       </div>
       {imageUrl && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <ZoomableImage
           src={imageUrl}
           alt={title}
           className="mt-3 max-h-72 w-full rounded-xl border border-border bg-canvas object-contain"
