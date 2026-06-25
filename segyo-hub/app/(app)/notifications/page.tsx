@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { timeAgo } from '@/lib/time'
 import { cn } from '@/lib/cn'
 import { Card } from '@/components/ui/Card'
+import { MessageIcon, ReplyIcon, BellIcon } from '@/components/ui/icons'
 
 type Notif = {
   id: number
@@ -14,18 +15,8 @@ type Notif = {
 }
 
 function KindIcon({ kind }: { kind: Notif['kind'] }) {
-  if (kind === 'reply_on_comment') {
-    return (
-      <span aria-hidden="true" className="flex-shrink-0 text-lg leading-none">
-        ↩️
-      </span>
-    )
-  }
-  return (
-    <span aria-hidden="true" className="flex-shrink-0 text-lg leading-none">
-      💬
-    </span>
-  )
+  const Icon = kind === 'reply_on_comment' ? ReplyIcon : MessageIcon
+  return <Icon size={20} className="mt-0.5 shrink-0 text-primary-600" />
 }
 
 export default async function NotificationsPage() {
@@ -48,7 +39,7 @@ export default async function NotificationsPage() {
 
       {items.length === 0 ? (
         <Card className="flex flex-col items-center gap-2 py-16 text-center">
-          <span className="text-3xl">🔔</span>
+          <BellIcon size={32} className="text-muted-fg" />
           <p className="text-sm font-medium text-foreground">새 알림이 없어요</p>
           <p className="text-xs text-muted-fg">댓글이나 답글이 달리면 여기에 표시돼요.</p>
         </Card>

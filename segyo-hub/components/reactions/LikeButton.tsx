@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { HeartIcon } from '@/components/ui/icons'
+import { cn } from '@/lib/cn'
 
 export function LikeButton({
   targetType,
@@ -54,15 +56,19 @@ export function LikeButton({
     setBusy(false)
   }
 
-  const cls = small ? 'text-xs' : 'text-sm'
   return (
     <button
       type="button"
       onClick={toggle}
       disabled={busy}
-      className={`${cls} ${liked ? 'text-red-600' : 'text-gray-600'}`}
+      className={cn(
+        'inline-flex items-center gap-1 transition-colors',
+        small ? 'text-xs' : 'text-sm',
+        liked ? 'text-danger' : 'text-muted-fg hover:text-danger',
+      )}
     >
-      {liked ? '❤️' : '🤍'} {count}
+      <HeartIcon size={small ? 14 : 16} filled={liked} />
+      {count}
     </button>
   )
 }

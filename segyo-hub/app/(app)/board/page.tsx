@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { PostListItem } from '@/components/post/PostListItem'
 import { extractThumb, toExcerpt } from '@/lib/postPreview'
+import { SearchIcon, FileTextIcon } from '@/components/ui/icons'
 
 type AuthorRel = { nickname: string | null; avatar_url: string | null } | null
 type PostRow = {
@@ -138,13 +139,13 @@ export default async function BoardPage({
         </ul>
       ) : q ? (
         <div className="rounded-2xl border border-dashed border-border bg-surface px-4 py-16 text-center">
-          <p className="text-2xl">🔍</p>
+          <SearchIcon size={32} className="mx-auto text-muted-fg" />
           <p className="mt-2 font-medium text-foreground">‘{q}’ 검색 결과가 없어요</p>
           <p className="mt-1 text-sm text-muted-fg">다른 검색어로 찾아보세요.</p>
         </div>
       ) : (
         <div className="rounded-2xl border border-dashed border-border bg-surface px-4 py-16 text-center">
-          <p className="text-2xl">📝</p>
+          <FileTextIcon size={32} className="mx-auto text-muted-fg" />
           <p className="mt-2 font-medium text-foreground">아직 글이 없어요</p>
           <p className="mt-1 text-sm text-muted-fg">첫 글을 써서 이야기를 시작해보세요!</p>
           <Link

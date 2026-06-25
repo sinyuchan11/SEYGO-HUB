@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { PostListItem } from '@/components/post/PostListItem'
 import { extractThumb, toExcerpt } from '@/lib/postPreview'
 import { ZoomableImage } from '@/components/ui/ZoomableImage'
+import { FlameIcon, ClockIcon, UtensilsIcon, CalendarIcon } from '@/components/ui/icons'
 
 type AuthorRel = { nickname: string | null; avatar_url: string | null } | null
 type PostRow = {
@@ -150,13 +151,13 @@ export default async function HomePage() {
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <InfoCard
-            emoji="🍴"
+            icon={<UtensilsIcon size={18} className="text-primary-600" />}
             title={meal?.title ?? '오늘의 식단'}
             body={meal?.body ?? null}
             imageUrl={meal?.image_url ?? null}
           />
           <InfoCard
-            emoji="📅"
+            icon={<CalendarIcon size={18} className="text-primary-600" />}
             title={schedule?.title ?? '일정표'}
             body={schedule?.body ?? null}
             imageUrl={schedule?.image_url ?? null}
@@ -168,7 +169,9 @@ export default async function HomePage() {
       {popular.length > 0 && (
         <section>
           <div className="mb-2 flex items-center justify-between">
-            <h3 className="text-sm font-bold text-foreground">🔥 인기글</h3>
+            <h3 className="flex items-center gap-1.5 text-sm font-bold text-foreground">
+              <FlameIcon size={16} className="text-primary-600" /> 인기글
+            </h3>
             <Link href="/board?sort=popular" className="text-xs font-medium text-primary-600 hover:underline">
               더보기 →
             </Link>
@@ -184,7 +187,9 @@ export default async function HomePage() {
       {/* Recent posts */}
       <section>
         <div className="mb-2 flex items-center justify-between">
-          <h3 className="text-sm font-bold text-foreground">🕒 최근 글</h3>
+          <h3 className="flex items-center gap-1.5 text-sm font-bold text-foreground">
+            <ClockIcon size={16} className="text-primary-600" /> 최근 글
+          </h3>
           <Link href="/board" className="text-xs font-medium text-primary-600 hover:underline">
             더보기 →
           </Link>
@@ -235,12 +240,12 @@ function QuickAction({
 }
 
 function InfoCard({
-  emoji,
+  icon,
   title,
   body,
   imageUrl,
 }: {
-  emoji: string
+  icon: React.ReactNode
   title: string
   body: string | null
   imageUrl: string | null
@@ -248,7 +253,7 @@ function InfoCard({
   return (
     <div className="rounded-2xl border border-border bg-surface p-4">
       <div className="flex items-center gap-2">
-        <span className="text-lg">{emoji}</span>
+        {icon}
         <h4 className="text-sm font-bold text-foreground">{title}</h4>
       </div>
       {imageUrl && (
