@@ -23,7 +23,7 @@ function toExcerpt(html: string, max = 140): string {
   return text.length > max ? text.slice(0, max).trimEnd() + '…' : text
 }
 
-type AuthorRel = { nickname: string | null } | null
+type AuthorRel = { nickname: string | null; avatar_url: string | null } | null
 type PostRow = {
   id: number
   title: string
@@ -47,7 +47,7 @@ export default async function BoardPage({
     .from('posts')
     .select(`
       id, title, content, is_anonymous, created_at,
-      author:profiles!posts_author_id_fkey ( nickname )
+      author:profiles!posts_author_id_fkey ( nickname, avatar_url )
     `)
     .eq('board', 'free')
     .is('deleted_at', null)
@@ -145,6 +145,7 @@ export default async function BoardPage({
                 id={post.id}
                 title={post.title}
                 authorNickname={post.author?.nickname ?? null}
+                authorAvatarUrl={post.author?.avatar_url ?? null}
                 isAnonymous={post.is_anonymous}
                 createdAt={post.created_at}
                 commentCount={commentCount}
