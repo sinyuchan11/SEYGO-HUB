@@ -20,9 +20,15 @@ export default async function HomePage() {
   } = await supabase.auth.getUser()
 
   const { data: me } = user
-    ? await supabase.from('profiles').select('nickname').eq('id', user.id).single()
+    ? await supabase.from('profiles').select('nickname, role').eq('id', user.id).single()
     : { data: null }
   const nickname = me?.nickname ?? '친구'
+  const isAdmin = me?.role === 'admin'
+
+  // Info cards (meal / schedule). Gracefully degrades if the table isn't applied yet.
+  const { data: infoCards } = await supabase.from('info_cards').select('key, title, body')
+  const meal = infoCards?.find((c) => c.key === 'meal') ?? null
+  const schedule = infoCards?.find((c) => c.key === 'schedule') ?? null
 
   const { data: posts } = await supabase
     .from('posts')
@@ -129,12 +135,19 @@ export default async function HomePage() {
         </QuickAction>
       </section>
 
-      {/* Meal plan / schedule placeholder cards */}
+      {/* Meal plan / schedule cards (admin-editable) */}
       <section>
-        <h3 className="mb-2 text-sm font-bold text-foreground">오늘의 정보</h3>
+        <div className="mb-2 flex items-center justify-between">
+          <h3 className="text-sm font-bold text-foreground">오늘의 정보</h3>
+          {isAdmin && (
+            <Link href="/admin/info" className="text-xs font-medium text-primary-600 hover:underline">
+              편집
+            </Link>
+          )}
+        </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <InfoCard emoji="🍴" title="오늘의 식단" />
-          <InfoCard emoji="📅" title="일정표" />
+          <InfoCard emoji="🍴" title={meal?.title ?? '오늘의 식단'} body={meal?.body ?? null} />
+          <InfoCard emoji="📅" title={schedule?.title ?? '일정표'} body={schedule?.body ?? null} />
         </div>
       </section>
 
@@ -208,16 +221,28 @@ function QuickAction({
   )
 }
 
-function InfoCard({ emoji, title }: { emoji: string; title: string }) {
+function InfoCard({
+  emoji,
+  title,
+  body,
+}: {
+  emoji: string
+  title: string
+  body: string | null
+}) {
   return (
     <div className="rounded-2xl border border-border bg-surface p-4">
       <div className="flex items-center gap-2">
         <span className="text-lg">{emoji}</span>
         <h4 className="text-sm font-bold text-foreground">{title}</h4>
       </div>
-      <div className="mt-3 flex min-h-[72px] items-center justify-center rounded-xl bg-canvas text-center text-xs text-muted-fg">
-        곧 여기에 표시될 예정이에요
-      </div>
+      {body ? (
+        <p className="mt-3 whitespace-pre-wrap text-sm text-foreground">{body}</p>
+      ) : (
+        <div className="mt-3 flex min-h-[72px] items-center justify-center rounded-xl bg-canvas text-center text-xs text-muted-fg">
+          아직 등록된 내용이 없어요
+        </div>
+      )}
     </div>
   )
 }
