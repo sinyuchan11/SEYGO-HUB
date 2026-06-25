@@ -1,27 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { PostListItem } from '@/components/post/PostListItem'
-
-/** First <img> src in the post HTML, used as a list thumbnail. */
-function extractThumb(html: string): string | null {
-  const m = html.match(/<img[^>]+src=["']([^"']+)["']/i)
-  return m ? m[1] : null
-}
-
-/** Strip HTML to a short plain-text excerpt for the list preview. */
-function toExcerpt(html: string, max = 140): string {
-  const text = html
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/gi, ' ')
-    .replace(/&amp;/gi, '&')
-    .replace(/&lt;/gi, '<')
-    .replace(/&gt;/gi, '>')
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;/gi, "'")
-    .replace(/\s+/g, ' ')
-    .trim()
-  return text.length > max ? text.slice(0, max).trimEnd() + '…' : text
-}
+import { extractThumb, toExcerpt } from '@/lib/postPreview'
 
 type AuthorRel = { nickname: string | null; avatar_url: string | null } | null
 type PostRow = {
