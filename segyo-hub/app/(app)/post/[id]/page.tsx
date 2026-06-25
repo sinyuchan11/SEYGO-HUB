@@ -32,7 +32,7 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
     .from('comments')
     .select(`
       id, post_id, author_id, parent_comment_id, content, is_anonymous, created_at, deleted_at,
-      author:profiles!comments_author_id_fkey ( nickname )
+      author:profiles!comments_author_id_fkey ( nickname, avatar_url )
     `)
     .eq('post_id', postId)
     .is('deleted_at', null)
@@ -78,6 +78,7 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
     comments: (comments ?? []).map((c: any) => ({
       id: c.id,
       authorNickname: c.author?.nickname ?? null,
+      authorAvatarUrl: c.author?.avatar_url ?? null,
       isAnonymous: c.is_anonymous,
       content: c.content,
       createdAt: c.created_at,

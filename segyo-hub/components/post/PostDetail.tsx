@@ -189,7 +189,7 @@ export function PostDetail({ data }: { data: PostDetailData }) {
                 small
               />
               {c.parentId === null && (
-                <button onClick={() => setReplyTo(c.id)} className="text-blue-600">
+                <button onClick={() => setReplyTo(c.id)} className="font-medium text-primary-600 hover:text-primary-700">
                   답글
                 </button>
               )}
@@ -198,11 +198,15 @@ export function PostDetail({ data }: { data: PostDetailData }) {
         }}
       />
 
-      <div className="sticky bottom-16 border-t bg-white p-3">
+      <div className="sticky bottom-16 border-t border-border bg-surface px-4 py-3 shadow-[0_-1px_0_0_var(--color-border)]">
         {replyTo !== null && (
-          <p className="mb-1 text-xs text-gray-500">
-            답글 작성 중 ·{' '}
-            <button onClick={() => setReplyTo(null)} className="text-blue-600">
+          <p className="mb-2 flex items-center gap-1 text-xs text-muted-fg">
+            <span>답글 작성 중</span>
+            <span className="text-border">·</span>
+            <button
+              onClick={() => setReplyTo(null)}
+              className="font-medium text-primary-600 hover:text-primary-700"
+            >
               취소
             </button>
           </p>
@@ -210,20 +214,21 @@ export function PostDetail({ data }: { data: PostDetailData }) {
         <div className="flex gap-2">
           <input
             type="text"
-            placeholder={replyTo !== null ? '답글 입력' : '댓글 입력'}
+            placeholder={replyTo !== null ? '답글을 입력하세요' : '댓글을 입력하세요'}
             value={text}
             onChange={(e) => setText(e.target.value)}
-            className="flex-1 rounded border px-3 py-2 text-sm"
+            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitComment() } }}
+            className="flex-1 rounded-xl border border-border bg-canvas px-3 py-2 text-sm text-foreground placeholder:text-muted-fg focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-200"
           />
           <button
             onClick={submitComment}
             disabled={submitting || !text.trim()}
-            className="rounded bg-blue-600 px-3 py-2 text-sm text-white disabled:opacity-50"
+            className="rounded-xl bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-40"
           >
             등록
           </button>
         </div>
-        {commentError && <p className="mt-1 text-xs text-danger">{commentError}</p>}
+        {commentError && <p className="mt-1.5 text-xs text-danger">{commentError}</p>}
       </div>
     </main>
   )
