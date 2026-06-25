@@ -19,7 +19,7 @@ export default async function AdminInfoPage() {
 
   const { data: cards } = await supabase
     .from('info_cards')
-    .select('key, title, body')
+    .select('key, title, body, image_url')
     .order('key')
   const rows = (cards ?? []) as InfoCardRow[]
 
@@ -45,8 +45,9 @@ export default async function AdminInfoPage() {
         <InfoCardsEditor initial={rows} />
       ) : (
         <div className="rounded-2xl border border-dashed border-border bg-surface p-4 text-sm text-muted-fg">
-          아직 <code className="rounded bg-muted px-1">info_cards</code> 테이블이 없어요. 마이그레이션
-          <code className="rounded bg-muted px-1">0009_info_cards.sql</code> 을 적용한 뒤 다시 열어주세요.
+          정보 카드를 불러오지 못했어요. 마이그레이션{' '}
+          <code className="rounded bg-muted px-1">0009_info_cards.sql</code> ·{' '}
+          <code className="rounded bg-muted px-1">0010_info_card_image.sql</code> 을 적용한 뒤 다시 열어주세요.
         </div>
       )}
     </div>

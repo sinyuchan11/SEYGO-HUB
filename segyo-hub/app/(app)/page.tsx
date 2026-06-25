@@ -26,7 +26,9 @@ export default async function HomePage() {
   const isAdmin = me?.role === 'admin'
 
   // Info cards (meal / schedule). Gracefully degrades if the table isn't applied yet.
-  const { data: infoCards } = await supabase.from('info_cards').select('key, title, body')
+  const { data: infoCards } = await supabase
+    .from('info_cards')
+    .select('key, title, body, image_url')
   const meal = infoCards?.find((c) => c.key === 'meal') ?? null
   const schedule = infoCards?.find((c) => c.key === 'schedule') ?? null
 
@@ -146,8 +148,18 @@ export default async function HomePage() {
           )}
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <InfoCard emoji="🍴" title={meal?.title ?? '오늘의 식단'} body={meal?.body ?? null} />
-          <InfoCard emoji="📅" title={schedule?.title ?? '일정표'} body={schedule?.body ?? null} />
+          <InfoCard
+            emoji="🍴"
+            title={meal?.title ?? '오늘의 식단'}
+            body={meal?.body ?? null}
+            imageUrl={meal?.image_url ?? null}
+          />
+          <InfoCard
+            emoji="📅"
+            title={schedule?.title ?? '일정표'}
+            body={schedule?.body ?? null}
+            imageUrl={schedule?.image_url ?? null}
+          />
         </div>
       </section>
 
@@ -225,10 +237,12 @@ function InfoCard({
   emoji,
   title,
   body,
+  imageUrl,
 }: {
   emoji: string
   title: string
   body: string | null
+  imageUrl: string | null
 }) {
   return (
     <div className="rounded-2xl border border-border bg-surface p-4">
@@ -236,9 +250,16 @@ function InfoCard({
         <span className="text-lg">{emoji}</span>
         <h4 className="text-sm font-bold text-foreground">{title}</h4>
       </div>
-      {body ? (
-        <p className="mt-3 whitespace-pre-wrap text-sm text-foreground">{body}</p>
-      ) : (
+      {imageUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={imageUrl}
+          alt={title}
+          className="mt-3 max-h-72 w-full rounded-xl border border-border bg-canvas object-contain"
+        />
+      )}
+      {body && <p className="mt-3 whitespace-pre-wrap text-sm text-foreground">{body}</p>}
+      {!imageUrl && !body && (
         <div className="mt-3 flex min-h-[72px] items-center justify-center rounded-xl bg-canvas text-center text-xs text-muted-fg">
           아직 등록된 내용이 없어요
         </div>
