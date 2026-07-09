@@ -40,7 +40,7 @@ export default async function AdminUsersPage() {
     <div>
       <header className="border-b border-border bg-surface px-4 py-3">
         <h2 className="font-bold">사용자 관리</h2>
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-muted-fg">
           {me.role === 'admin'
             ? '권한 변경/차단 모두 가능합니다.'
             : '모더는 권한 변경 권한이 제한될 수 있어요 (관리자만 admin 지정 가능).'}

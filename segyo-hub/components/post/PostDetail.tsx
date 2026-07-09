@@ -97,7 +97,7 @@ export function PostDetail({ data }: { data: PostDetailData }) {
         </button>
       </div>
 
-      <article className="border-b bg-white px-4 py-4">
+      <article className="border-b border-border bg-surface px-4 py-4">
         <div className="flex items-start justify-between gap-2">
           <h1 className="text-lg font-bold">{data.title}</h1>
           {(data.isMine || data.canModerate) && (
@@ -126,7 +126,7 @@ export function PostDetail({ data }: { data: PostDetailData }) {
             </DropdownMenu>
           )}
         </div>
-        <div className="mt-1 flex gap-2 text-xs text-gray-500">
+        <div className="mt-1 flex gap-2 text-xs text-muted-fg">
           <span>{data.isAnonymous ? '익명' : (data.authorNickname ?? '?')}</span>
           <span suppressHydrationWarning>{timeAgo(data.createdAt)}</span>
         </div>

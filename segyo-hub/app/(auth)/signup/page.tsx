@@ -8,7 +8,7 @@ export default function SignupPage() {
       <SignupForm />
       <p className="mt-4 text-center text-sm">
         이미 계정 있어요?{' '}
-        <Link href="/login" className="text-blue-600">로그인</Link>
+        <Link href="/login" className="text-primary-600">로그인</Link>
       </p>
     </main>
   )

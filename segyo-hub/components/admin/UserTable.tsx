@@ -46,7 +46,7 @@ export function UserTable({ rows, currentUserId }: { rows: Row[]; currentUserId:
 
   return (
     <div className="overflow-x-auto">
-      {error && <p className="px-4 py-2 text-sm text-red-600">{error}</p>}
+      {error && <p className="px-4 py-2 text-sm text-danger">{error}</p>}
       {confirmDemotion && (
         <div className="flex flex-wrap items-center gap-3 border-b border-warning/40 bg-warning/10 px-4 py-2 text-sm">
           <span className="text-foreground">
@@ -68,7 +68,7 @@ export function UserTable({ rows, currentUserId }: { rows: Row[]; currentUserId:
         </div>
       )}
       <table className="min-w-full text-sm">
-        <thead className="bg-gray-100">
+        <thead className="bg-muted">
           <tr>
             <th className="px-3 py-2 text-left">닉네임/이메일</th>
             <th className="px-3 py-2 text-left">반</th>
@@ -81,7 +81,7 @@ export function UserTable({ rows, currentUserId }: { rows: Row[]; currentUserId:
             <tr key={r.id} className="border-b">
               <td className="px-3 py-2">
                 <div className="font-medium">{r.nickname ?? '(미설정)'}</div>
-                <div className="text-xs text-gray-500">{r.email ?? '-'}</div>
+                <div className="text-xs text-muted-fg">{r.email ?? '-'}</div>
               </td>
               <td className="px-3 py-2">{r.grade_class ?? '-'}</td>
               <td className="px-3 py-2">
@@ -98,7 +98,7 @@ export function UserTable({ rows, currentUserId }: { rows: Row[]; currentUserId:
                   <option value="banned">차단</option>
                 </select>
               </td>
-              <td className="px-3 py-2 text-xs text-gray-500">
+              <td className="px-3 py-2 text-xs text-muted-fg">
                 {new Date(r.created_at).toLocaleDateString('ko-KR')}
               </td>
             </tr>

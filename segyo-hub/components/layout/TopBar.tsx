@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Input } from '@/components/ui/Input'
 import { Avatar } from '@/components/ui/Avatar'
 import { NotificationBell } from './NotificationBell'
+import { ThemeToggle } from './ThemeToggle'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -49,6 +50,7 @@ export function TopBar({
       </div>
 
       <div className="ml-auto flex items-center gap-1">
+        <ThemeToggle />
         <NotificationBell />
         <DropdownMenu>
           <DropdownMenuTrigger aria-label="내 메뉴" className="rounded-full outline-none ring-white/50 focus-visible:ring-2">

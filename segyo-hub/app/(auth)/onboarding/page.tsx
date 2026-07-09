@@ -45,7 +45,7 @@ export default function OnboardingPage() {
   return (
     <main className="mx-auto max-w-sm px-4 py-12">
       <h1 className="mb-2 text-2xl font-bold">환영해요!</h1>
-      <p className="mb-6 text-sm text-gray-600">
+      <p className="mb-6 text-sm text-muted-fg">
         닉네임을 정해주세요. 학년반은 선택입니다.
       </p>
       <form onSubmit={onSubmit} className="space-y-4">
@@ -66,11 +66,11 @@ export default function OnboardingPage() {
           onChange={(e) => setGradeClass(e.target.value)}
           className="w-full rounded border px-3 py-2"
         />
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-danger">{error}</p>}
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded bg-blue-600 py-2 text-white disabled:opacity-50"
+          className="w-full rounded bg-primary-600 py-2 text-white disabled:opacity-50"
         >
           {loading ? '저장 중...' : '시작하기'}
         </button>

@@ -4,7 +4,7 @@ import { LoginForm } from '@/components/auth/LoginForm'
 export default function LoginPage() {
   return (
     // Full-screen canvas background, vertically and horizontally centered
-    <div className="min-h-screen bg-white flex items-center justify-center p-4">
+    <div className="min-h-screen bg-canvas flex items-center justify-center p-4">
       {/*
         Split card:
         - max-w-[960px] on md+, max-w-md on mobile (form-only)

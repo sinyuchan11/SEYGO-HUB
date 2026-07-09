@@ -69,11 +69,11 @@ export function SignupForm() {
           볼 수 있다는 점에 동의합니다.
         </span>
       </label>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded bg-blue-600 py-2 text-white disabled:opacity-50"
+        className="w-full rounded bg-primary-600 py-2 text-white disabled:opacity-50"
       >
         {loading ? '가입 중...' : '가입하기'}
       </button>

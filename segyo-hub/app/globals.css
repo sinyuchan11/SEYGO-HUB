@@ -36,6 +36,23 @@ body {
   font-family: var(--font-sans);
 }
 
+/* Dark mode: override the semantic tokens; token-based components flip automatically. */
+.dark {
+  --color-surface: #171a21;
+  --color-canvas: #0e1014;
+  --color-muted: #262a33;
+  --color-border: #2b303a;
+  --color-muted-fg: #9aa2ad;
+  --color-foreground: #e6e8ec;
+  --color-primary-50: #211a34;
+  --color-primary-100: #2c2352;
+  --color-primary-200: #3a2f66;
+}
+
+.dark {
+  color-scheme: dark;
+}
+
 /* ── Rich text content styles (editor surface + post detail) ─────── */
 .post-content,
 .ProseMirror {
@@ -119,7 +136,7 @@ body {
 
 .post-content pre,
 .ProseMirror pre {
-  background: var(--color-foreground);
+  background: #1e222a;
   color: #e5e7eb;
   border-radius: 8px;
   padding: 1rem;
@@ -165,6 +182,7 @@ body {
 .post-content mark,
 .ProseMirror mark {
   background: #fde68a;
+  color: #1a1a1a;
   padding: 0.05em 0.2em;
   border-radius: 2px;
 }

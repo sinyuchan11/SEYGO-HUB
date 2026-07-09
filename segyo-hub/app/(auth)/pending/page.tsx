@@ -26,21 +26,21 @@ export default async function PendingPage() {
       {banned ? (
         <>
           <h1 className="mb-4 text-2xl font-bold">접근이 차단되었습니다</h1>
-          <p className="text-gray-600">
+          <p className="text-muted-fg">
             운영자가 계정을 차단했습니다. 문의는 운영자에게 직접 연락해 주세요.
           </p>
         </>
       ) : (
         <>
           <h1 className="mb-4 text-2xl font-bold">승인 대기 중</h1>
-          <p className="text-gray-600">
+          <p className="text-muted-fg">
             가입은 완료되었지만 아직 운영자의 승인이 필요해요. 승인되면
             바로 글을 쓸 수 있습니다.
           </p>
         </>
       )}
       <form action={logout} className="mt-8">
-        <button type="submit" className="text-sm text-blue-600 underline">
+        <button type="submit" className="text-sm text-primary-600 underline">
           로그아웃
         </button>
       </form>
