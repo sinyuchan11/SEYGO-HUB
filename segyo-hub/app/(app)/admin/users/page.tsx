@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { UserTable } from '@/components/admin/UserTable'
@@ -38,13 +39,21 @@ export default async function AdminUsersPage() {
 
   return (
     <div>
-      <header className="border-b border-border bg-surface px-4 py-3">
-        <h2 className="font-bold">사용자 관리</h2>
-        <p className="text-xs text-muted-fg">
-          {me.role === 'admin'
-            ? '권한 변경/차단 모두 가능합니다.'
-            : '모더는 권한 변경 권한이 제한될 수 있어요 (관리자만 admin 지정 가능).'}
-        </p>
+      <header className="flex items-start justify-between gap-2 border-b border-border bg-surface px-4 py-3">
+        <div>
+          <h2 className="font-bold">사용자 관리</h2>
+          <p className="text-xs text-muted-fg">
+            {me.role === 'admin'
+              ? '권한 변경/차단 모두 가능합니다.'
+              : '모더는 권한 변경 권한이 제한될 수 있어요 (관리자만 admin 지정 가능).'}
+          </p>
+        </div>
+        <Link
+          href="/admin/reports"
+          className="shrink-0 rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted"
+        >
+          신고 관리
+        </Link>
       </header>
       <UserTable rows={rows} currentUserId={user.id} />
     </div>

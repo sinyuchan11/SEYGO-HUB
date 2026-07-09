@@ -12,6 +12,7 @@ import {
   DropdownMenuItem,
 } from '@/components/ui/DropdownMenu'
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/Dialog'
+import { ReportDialog } from '@/components/report/ReportDialog'
 import { timeAgo } from '@/lib/time'
 import DOMPurify from 'isomorphic-dompurify'
 
@@ -38,6 +39,7 @@ export function PostDetail({ data }: { data: PostDetailData }) {
   const [submitting, setSubmitting] = useState(false)
   const [commentError, setCommentError] = useState<string | null>(null)
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const [reportOpen, setReportOpen] = useState(false)
 
   async function submitComment() {
     if (!text.trim()) return
@@ -100,31 +102,34 @@ export function PostDetail({ data }: { data: PostDetailData }) {
       <article className="border-b border-border bg-surface px-4 py-4">
         <div className="flex items-start justify-between gap-2">
           <h1 className="text-lg font-bold">{data.title}</h1>
-          {(data.isMine || data.canModerate) && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  aria-label="더보기"
-                  className="-mr-1 shrink-0 rounded-md p-1.5 text-muted-fg hover:bg-muted"
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <circle cx="5" cy="12" r="1.6" />
-                    <circle cx="12" cy="12" r="1.6" />
-                    <circle cx="19" cy="12" r="1.6" />
-                  </svg>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-label="더보기"
+                className="-mr-1 shrink-0 rounded-md p-1.5 text-muted-fg hover:bg-muted"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <circle cx="5" cy="12" r="1.6" />
+                  <circle cx="12" cy="12" r="1.6" />
+                  <circle cx="19" cy="12" r="1.6" />
+                </svg>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              {!data.isMine && (
+                <DropdownMenuItem onSelect={() => setReportOpen(true)}>신고</DropdownMenuItem>
+              )}
+              {(data.isMine || data.canModerate) && (
                 <DropdownMenuItem
                   onSelect={() => setDeleteOpen(true)}
                   className="text-danger data-[highlighted]:bg-danger/10"
                 >
                   삭제
                 </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         <div className="mt-1 flex gap-2 text-xs text-muted-fg">
           <span>{data.isAnonymous ? '익명' : (data.authorNickname ?? '?')}</span>
@@ -174,6 +179,14 @@ export function PostDetail({ data }: { data: PostDetailData }) {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Report */}
+      <ReportDialog
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+        targetType="post"
+        targetId={data.id}
+      />
 
       <CommentTree
         comments={data.comments}
