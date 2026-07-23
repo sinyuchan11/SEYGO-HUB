@@ -3,34 +3,43 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/cn'
+import {
+  HomeIcon,
+  BoardIcon,
+  PenSquareIcon,
+  UserIcon,
+} from '@/components/ui/icons'
 
 const tabs = [
-  { href: '/', label: '홈' },
-  { href: '/board', label: '게시판' },
-  { href: '/post/new', label: '글쓰기' },
-  { href: '/me', label: '내정보' },
+  { href: '/', label: '홈', Icon: HomeIcon },
+  { href: '/board', label: '게시판', Icon: BoardIcon },
+  { href: '/post/new', label: '글쓰기', Icon: PenSquareIcon },
+  { href: '/me', label: '내정보', Icon: UserIcon },
 ] as const
 
 export function BottomNav() {
   const pathname = usePathname()
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-border bg-surface md:hidden">
-      {tabs.map((t) => {
+    <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] md:hidden">
+      {tabs.map(({ href, label, Icon }) => {
         const active =
-          t.href === '/'
+          href === '/'
             ? pathname === '/'
-            : pathname === t.href || pathname.startsWith(t.href + '/')
+            : pathname === href || pathname.startsWith(href + '/')
         return (
           <Link
-            key={t.href}
-            href={t.href}
+            key={href}
+            href={href}
             aria-current={active ? 'page' : undefined}
             className={cn(
-              'py-3 text-center text-sm',
-              active ? 'font-bold text-primary-600' : 'text-muted-fg',
+              'flex flex-col items-center gap-1 py-2.5 transition-colors',
+              active ? 'text-primary-600' : 'text-muted-fg',
             )}
           >
-            {t.label}
+            <Icon size={20} className={active ? 'stroke-[2.5]' : undefined} />
+            <span className={cn('text-[11px]', active && 'font-semibold')}>
+              {label}
+            </span>
           </Link>
         )
       })}
