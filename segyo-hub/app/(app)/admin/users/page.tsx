@@ -48,12 +48,22 @@ export default async function AdminUsersPage() {
               : '모더는 권한 변경 권한이 제한될 수 있어요 (관리자만 admin 지정 가능).'}
           </p>
         </div>
-        <Link
-          href="/admin/reports"
-          className="shrink-0 rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted"
-        >
-          신고 관리
-        </Link>
+        <div className="flex shrink-0 items-center gap-2">
+          <Link
+            href="/admin/reports"
+            className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted"
+          >
+            신고 관리
+          </Link>
+          {me.role === 'admin' && (
+            <Link
+              href="/admin/words"
+              className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted"
+            >
+              금지어 관리
+            </Link>
+          )}
+        </div>
       </header>
       <UserTable rows={rows} currentUserId={user.id} />
     </div>

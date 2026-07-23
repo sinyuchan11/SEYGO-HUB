@@ -14,6 +14,7 @@ import {
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/Dialog'
 import { ReportDialog } from '@/components/report/ReportDialog'
 import { timeAgo } from '@/lib/time'
+import { checkContainsProfanity } from '@/lib/profanity'
 import DOMPurify from 'isomorphic-dompurify'
 
 export type PostDetailData = {
@@ -38,6 +39,8 @@ export function PostDetail({ data }: { data: PostDetailData }) {
   const [text, setText] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [commentError, setCommentError] = useState<string | null>(null)
+  const [commentWarning, setCommentWarning] = useState<string | null>(null)
+  const [commentWarned, setCommentWarned] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [reportOpen, setReportOpen] = useState(false)
 
@@ -46,6 +49,19 @@ export function PostDetail({ data }: { data: PostDetailData }) {
     setCommentError(null)
     setSubmitting(true)
     const supabase = createClient()
+
+    // 비속어 경고 (경고 후 마스킹): 처음 감지되면 등록을 보류하고, 한 번 더 누르면 진행.
+    // 저장 시 서버 트리거가 마스킹한다.
+    if (!commentWarned) {
+      const hasProfanity = await checkContainsProfanity(supabase, text.trim())
+      if (hasProfanity) {
+        setCommentWarning('비속어가 포함되어 있어요. 그대로 등록하면 가려진 채 저장됩니다. 다시 한 번 누르세요.')
+        setCommentWarned(true)
+        setSubmitting(false)
+        return
+      }
+    }
+
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
       router.push('/login')
@@ -64,6 +80,8 @@ export function PostDetail({ data }: { data: PostDetailData }) {
     }
     setText('')
     setReplyTo(null)
+    setCommentWarned(false)
+    setCommentWarning(null)
     router.refresh()
   }
 
@@ -229,7 +247,13 @@ export function PostDetail({ data }: { data: PostDetailData }) {
             type="text"
             placeholder={replyTo !== null ? '답글을 입력하세요' : '댓글을 입력하세요'}
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => {
+              setText(e.target.value)
+              if (commentWarned || commentWarning) {
+                setCommentWarned(false)
+                setCommentWarning(null)
+              }
+            }}
             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitComment() } }}
             className="flex-1 rounded-xl border border-border bg-canvas px-3 py-2 text-sm text-foreground placeholder:text-muted-fg focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-200"
           />
@@ -238,9 +262,10 @@ export function PostDetail({ data }: { data: PostDetailData }) {
             disabled={submitting || !text.trim()}
             className="rounded-xl bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-40"
           >
-            등록
+            {commentWarned ? '그대로 등록' : '등록'}
           </button>
         </div>
+        {commentWarning && <p className="mt-1.5 text-xs text-muted-fg">{commentWarning}</p>}
         {commentError && <p className="mt-1.5 text-xs text-danger">{commentError}</p>}
       </div>
     </main>

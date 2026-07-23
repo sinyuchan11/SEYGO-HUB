@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { canModerate, type UserRole } from '@/lib/permissions'
+import { buildCheckText, checkContainsProfanity } from '@/lib/profanity'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/cn'
 import { RichEditor } from '@/components/post/RichEditor'
@@ -26,6 +27,8 @@ export function PostForm() {
   const [board, setBoard] = useState<BoardKind>('free')
   const [isAnonymous, setIsAnonymous] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [warning, setWarning] = useState<string | null>(null)
+  const [warned, setWarned] = useState(false)
   const [loading, setLoading] = useState(false)
   const [userRole, setUserRole] = useState<UserRole | null>(null)
 
@@ -52,6 +55,14 @@ export function PostForm() {
       ? [...BOARD_OPTIONS, { value: 'notice' as BoardKind, label: '공지' }]
       : BOARD_OPTIONS
 
+  // 제목/내용이 바뀌면 이전 비속어 경고를 초기화한다 (변경분 재검사 유도).
+  function clearWarning() {
+    if (warned || warning) {
+      setWarned(false)
+      setWarning(null)
+    }
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
@@ -63,6 +74,19 @@ export function PostForm() {
 
     setLoading(true)
     const supabase = createClient()
+
+    // 비속어 경고 (경고 후 마스킹): 처음 감지되면 등록을 보류하고 경고만 표시.
+    // 사용자가 한 번 더 등록하면 진행하며, 저장 시 서버 트리거가 마스킹한다.
+    if (!warned) {
+      const hasProfanity = await checkContainsProfanity(supabase, buildCheckText(title, content))
+      if (hasProfanity) {
+        setWarning('비속어가 포함되어 있어요. 그대로 등록하면 해당 부분이 가려진 채 저장됩니다. 다시 한 번 눌러 등록하세요.')
+        setWarned(true)
+        setLoading(false)
+        return
+      }
+    }
+
     const {
       data: { user },
     } = await supabase.auth.getUser()
@@ -103,7 +127,10 @@ export function PostForm() {
           maxLength={100}
           placeholder="제목"
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          onChange={(e) => {
+            setTitle(e.target.value)
+            clearWarning()
+          }}
           className="w-full border-0 border-b border-border bg-transparent pb-2 text-xl font-bold placeholder-muted-fg focus:border-primary-600 focus:outline-none transition-colors"
         />
       </div>
@@ -159,12 +186,25 @@ export function PostForm() {
       </div>
 
       {/* Rich editor */}
-      <RichEditor value={content} onChange={setContent} />
+      <RichEditor
+        value={content}
+        onChange={(v) => {
+          setContent(v)
+          clearWarning()
+        }}
+      />
 
       {/* Error */}
       {error && (
         <p className="rounded-lg bg-danger/10 px-4 py-2 text-sm text-danger">
           {error}
+        </p>
+      )}
+
+      {/* Profanity warning */}
+      {warning && (
+        <p className="rounded-lg border border-border bg-muted px-4 py-2 text-sm text-foreground">
+          {warning}
         </p>
       )}
 
@@ -177,7 +217,7 @@ export function PostForm() {
           disabled={loading}
           className="min-w-[120px]"
         >
-          {loading ? '등록 중...' : '등록'}
+          {loading ? '등록 중...' : warned ? '그대로 등록' : '등록'}
         </Button>
       </div>
     </form>
