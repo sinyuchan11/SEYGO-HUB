@@ -17,6 +17,7 @@ import {
   Plus,
   Reply,
   Search,
+  ShieldAlert,
   SquarePen,
   Sun,
   Trash2,
@@ -77,6 +78,7 @@ export const GridIcon = icon(LayoutGrid, 'GridIcon')
 export const ListIcon = icon(List, 'ListIcon')
 export const CheckIcon = icon(Check, 'CheckIcon')
 export const XIcon = icon(X, 'XIcon')
+export const ShieldAlertIcon = icon(ShieldAlert, 'ShieldAlertIcon')
 export const ArrowRightIcon = icon(ArrowRight, 'ArrowRightIcon')
 
 /** Heart with an optional solid fill, used for the like button's on-state. */

@@ -4,17 +4,25 @@ import Link from 'next/link'
 import { timeAgo } from '@/lib/time'
 import { cn } from '@/lib/cn'
 import { Card } from '@/components/ui/Card'
-import { MessageIcon, ReplyIcon, BellIcon } from '@/components/ui/icons'
+import { MessageIcon, ReplyIcon, BellIcon, ShieldAlertIcon } from '@/components/ui/icons'
 
 type Notif = {
   id: number
-  kind: 'comment_on_post' | 'reply_on_comment'
-  payload: { post_id: number; comment_id: number; parent_comment_id?: number; actor_id: string }
+  kind: 'comment_on_post' | 'reply_on_comment' | 'profanity_evasion'
+  payload: { post_id: number; comment_id?: number; parent_comment_id?: number; actor_id: string }
   read_at: string | null
   created_at: string
 }
 
+const LABELS: Record<Notif['kind'], string> = {
+  comment_on_post: '내 글에 새 댓글이 달렸어요',
+  reply_on_comment: '내 댓글에 답글이 달렸어요',
+  profanity_evasion: '비속어 우회가 의심되는 글이 등록됐어요',
+}
+
 function KindIcon({ kind }: { kind: Notif['kind'] }) {
+  if (kind === 'profanity_evasion')
+    return <ShieldAlertIcon size={20} className="mt-0.5 shrink-0 text-danger" />
   const Icon = kind === 'reply_on_comment' ? ReplyIcon : MessageIcon
   return <Icon size={20} className="mt-0.5 shrink-0 text-primary-600" />
 }
@@ -56,11 +64,7 @@ export default async function NotificationsPage() {
               >
                 <KindIcon kind={n.kind} />
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm text-foreground">
-                    {n.kind === 'comment_on_post'
-                      ? '내 글에 새 댓글이 달렸어요'
-                      : '내 댓글에 답글이 달렸어요'}
-                  </p>
+                  <p className="text-sm text-foreground">{LABELS[n.kind]}</p>
                   <p className="mt-0.5 text-xs text-muted-fg" suppressHydrationWarning>
                     {timeAgo(n.created_at)}
                   </p>
