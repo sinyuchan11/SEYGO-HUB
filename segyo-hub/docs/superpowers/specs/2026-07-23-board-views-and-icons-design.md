@@ -94,6 +94,8 @@ Next.js 16은 `lucide-react`를 기본 `optimizePackageImports` 대상으로 갖
 | `components/admin/InfoCardsEditor.tsx:130` | `저장됐어요 ✓` | `CheckIcon` |
 | `components/ui/ZoomableImage.tsx:60` | `✕` | `XIcon` |
 
+추가로, 아이콘 컴포넌트가 있는데도 SVG를 다시 손으로 적어둔 곳(`app/(app)/page.tsx`의 검색 돋보기·퀵액션 3종, `app/(app)/board/page.tsx`의 검색 돋보기·FAB 플러스)도 공용 아이콘 컴포넌트로 바꾼다. 같은 그림이 두 벌로 관리되는 상태를 없애고, 퀵액션 아이콘이 좌측 레일·하단 탭바의 같은 항목과 일치하게 만든다.
+
 `app/globals.css`의 리치텍스트 스타일 등 콘텐츠 영역은 손대지 않는다. 사용자가 본문에 쓴 이모지는 대상이 아니다.
 
 ### 네비게이션 활성 상태
