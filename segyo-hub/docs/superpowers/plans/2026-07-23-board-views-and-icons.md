@@ -855,13 +855,12 @@ export function resolveAuthor(props: PostSummaryProps) {
 ```tsx
 import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
+import type { AnchorHTMLAttributes } from 'react'
 import { PostCard } from './PostCard'
 
 vi.mock('next/link', () => ({
-  default: ({ children, href, ...rest }: React.ComponentProps<'a'>) => (
-    <a href={href as string} {...rest}>
-      {children}
-    </a>
+  default: ({ children, ...rest }: AnchorHTMLAttributes<HTMLAnchorElement>) => (
+    <a {...rest}>{children}</a>
   ),
 }))
 
@@ -1010,7 +1009,9 @@ EOF
 
 **Interfaces:**
 - Consumes: `PostSummaryProps` `resolveAuthor` from `./PostSummary` (Task 5), `Avatar`, `timeAgo`, `MessageIcon` `HeartIcon`
-- Produces: `function PostListItem(props: PostSummaryProps)`, `type PostListItemProps = PostSummaryProps` (기존 이름 하위호환용 re-export)
+- Produces: `function PostListItem(props: PostSummaryProps)`
+
+> 기존 `PostListItemProps` export는 **삭제한다.** 저장소 어디서도 import 하지 않는 타입이라 남겨두면 죽은 코드다 (`grep -rn "PostListItemProps" --include="*.tsx" app components`로 확인 가능).
 
 - [ ] **Step 1: `components/post/PostListItem.tsx` 전체 교체**
 
@@ -1020,9 +1021,6 @@ import { Avatar } from '@/components/ui/Avatar'
 import { timeAgo } from '@/lib/time'
 import { MessageIcon, HeartIcon } from '@/components/ui/icons'
 import { resolveAuthor, type PostSummaryProps } from './PostSummary'
-
-/** Kept so existing imports of the old name keep type-checking. */
-export type PostListItemProps = PostSummaryProps
 
 /** Dense single-block row used by the board's list view and the home feeds. */
 export function PostListItem(props: PostSummaryProps) {
@@ -1120,13 +1118,12 @@ EOF
 ```tsx
 import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
+import type { AnchorHTMLAttributes } from 'react'
 import { ViewToggle } from './ViewToggle'
 
 vi.mock('next/link', () => ({
-  default: ({ children, href, ...rest }: React.ComponentProps<'a'>) => (
-    <a href={href as string} {...rest}>
-      {children}
-    </a>
+  default: ({ children, ...rest }: AnchorHTMLAttributes<HTMLAnchorElement>) => (
+    <a {...rest}>{children}</a>
   ),
 }))
 
