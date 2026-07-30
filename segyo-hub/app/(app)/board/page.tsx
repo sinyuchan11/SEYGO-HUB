@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { PostListItem } from '@/components/post/PostListItem'
 import { extractThumb, toExcerpt } from '@/lib/postPreview'
 import { SearchIcon, FileTextIcon } from '@/components/ui/icons'
+import { BOARD_TABS, parseBoard, boardHeading, boardEmptyText } from '@/lib/board'
 
 type AuthorRel = { nickname: string | null; avatar_url: string | null } | null
 type PostRow = {
@@ -17,11 +18,13 @@ type PostRow = {
 export default async function BoardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sort?: string; q?: string }>
+  searchParams: Promise<{ sort?: string; q?: string; board?: string }>
 }) {
   const sp = await searchParams
   const q = (sp.q ?? '').trim()
   const sort = sp.sort === 'popular' ? 'popular' : 'latest'
+  const board = parseBoard(sp.board)
+  const heading = boardHeading(board)
 
   const supabase = await createClient()
   let qb = supabase
@@ -30,8 +33,8 @@ export default async function BoardPage({
       id, title, content, is_anonymous, created_at,
       author:profiles!posts_author_id_fkey ( nickname, avatar_url )
     `)
-    .eq('board', 'free')
     .is('deleted_at', null)
+  if (board !== 'all') qb = qb.eq('board', board)
   if (q) qb = qb.ilike('title', `%${q}%`)
   const { data: posts } = await qb
     .order('created_at', { ascending: false })
@@ -63,35 +66,44 @@ export default async function BoardPage({
     )
   }
 
-  // Build sort-tab hrefs while preserving the search query.
+  // Build tab hrefs while preserving the search query.
   const qSuffix = q ? `&q=${encodeURIComponent(q)}` : ''
-  const tab = (key: 'latest' | 'popular', label: string) => {
-    const active = sort === key
-    return (
-      <Link
-        href={`/board?sort=${key}${qSuffix}`}
-        className={
-          'rounded-full px-3 py-1.5 text-sm font-medium transition-colors ' +
-          (active
-            ? 'bg-primary-600 text-white'
-            : 'text-muted-fg hover:bg-muted')
-        }
-      >
-        {label}
-      </Link>
-    )
-  }
+  const pill = (active: boolean) =>
+    'rounded-full px-3 py-1.5 text-sm font-medium transition-colors ' +
+    (active ? 'bg-primary-600 text-white' : 'text-muted-fg hover:bg-muted')
+
+  // Category tabs switch board, keeping sort + query.
+  const catTab = (key: (typeof BOARD_TABS)[number]['key'], label: string) => (
+    <Link href={`/board?board=${key}&sort=${sort}${qSuffix}`} className={pill(board === key)}>
+      {label}
+    </Link>
+  )
+
+  // Sort tabs keep the current board + query.
+  const tab = (key: 'latest' | 'popular', label: string) => (
+    <Link href={`/board?board=${board}&sort=${key}${qSuffix}`} className={pill(sort === key)}>
+      {label}
+    </Link>
+  )
 
   return (
     <div className="px-3 pb-24 md:pb-8">
       {/* Header */}
       <div className="mb-4 pt-1">
-        <h2 className="text-xl font-bold text-foreground">자유 게시판</h2>
-        <p className="mt-0.5 text-sm text-muted-fg">자유롭게 이야기를 나눠보세요</p>
+        <h2 className="text-xl font-bold text-foreground">{heading.title}</h2>
+        <p className="mt-0.5 text-sm text-muted-fg">{heading.subtitle}</p>
+      </div>
+
+      {/* Category tabs */}
+      <div className="mb-3 flex flex-wrap items-center gap-1.5">
+        {BOARD_TABS.map((t) => (
+          <span key={t.key}>{catTab(t.key, t.label)}</span>
+        ))}
       </div>
 
       {/* Search */}
       <form action="/board" method="get" className="mb-3">
+        <input type="hidden" name="board" value={board} />
         <input type="hidden" name="sort" value={sort} />
         <div className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 focus-within:border-primary-300 focus-within:ring-2 focus-within:ring-primary-100">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-muted-fg" aria-hidden="true">
@@ -146,7 +158,7 @@ export default async function BoardPage({
       ) : (
         <div className="rounded-2xl border border-dashed border-border bg-surface px-4 py-16 text-center">
           <FileTextIcon size={32} className="mx-auto text-muted-fg" />
-          <p className="mt-2 font-medium text-foreground">아직 글이 없어요</p>
+          <p className="mt-2 font-medium text-foreground">{boardEmptyText(board)}</p>
           <p className="mt-1 text-sm text-muted-fg">첫 글을 써서 이야기를 시작해보세요!</p>
           <Link
             href="/post/new"
