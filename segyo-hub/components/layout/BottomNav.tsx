@@ -8,19 +8,23 @@ import {
   BoardIcon,
   PenSquareIcon,
   UserIcon,
+  UsersIcon,
+  SendIcon,
 } from '@/components/ui/icons'
 
 const tabs = [
   { href: '/', label: '홈', Icon: HomeIcon },
   { href: '/board', label: '게시판', Icon: BoardIcon },
   { href: '/post/new', label: '글쓰기', Icon: PenSquareIcon },
+  { href: '/friends', label: '친구', Icon: UsersIcon },
+  { href: '/messages', label: '메시지', Icon: SendIcon },
   { href: '/me', label: '내정보', Icon: UserIcon },
 ] as const
 
 export function BottomNav() {
   const pathname = usePathname()
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] md:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] md:hidden">
       {tabs.map(({ href, label, Icon }) => {
         const active =
           href === '/'

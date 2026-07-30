@@ -17,11 +17,13 @@ import {
   Plus,
   Reply,
   Search,
+  Send,
   ShieldAlert,
   SquarePen,
   Sun,
   Trash2,
   UserRound,
+  Users,
   Utensils,
   X,
 } from 'lucide-react'
@@ -72,6 +74,8 @@ export const HomeIcon = icon(House, 'HomeIcon')
 export const BoardIcon = icon(MessagesSquare, 'BoardIcon')
 export const PenSquareIcon = icon(SquarePen, 'PenSquareIcon')
 export const UserIcon = icon(UserRound, 'UserIcon')
+export const UsersIcon = icon(Users, 'UsersIcon')
+export const SendIcon = icon(Send, 'SendIcon')
 
 /* ── Controls ────────────────────────────────────────────────────── */
 export const GridIcon = icon(LayoutGrid, 'GridIcon')

@@ -13,3 +13,10 @@ export function timeAgo(iso: string): string {
   if (diff < 7 * day) return `${Math.floor(diff / day)}일 전`
   return new Date(iso).toLocaleDateString('ko-KR')
 }
+
+/** Korean clock time, e.g. "오후 3:24". Use with suppressHydrationWarning. */
+export function formatClock(iso: string): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' })
+}

@@ -36,6 +36,14 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
     .limit(200)
     .returns<DmMessage[]>()
 
+  // The other party's read time (requires 0019 RLS; null until applied).
+  const { data: otherRead } = await supabase
+    .from('conversation_reads')
+    .select('last_read_at')
+    .eq('conversation_id', convId)
+    .eq('user_id', otherId)
+    .maybeSingle()
+
   return (
     <div className="px-3 py-2">
       <DmThread
@@ -43,6 +51,7 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
         myId={user.id}
         other={{ id: otherId, nickname: op?.nickname ?? null, avatarUrl: op?.avatar_url ?? null }}
         initial={msgs ?? []}
+        otherLastReadAt={otherRead?.last_read_at ?? null}
       />
     </div>
   )

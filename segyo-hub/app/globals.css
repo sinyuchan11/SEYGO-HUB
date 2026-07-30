@@ -195,3 +195,12 @@ body {
   height: 0;
   pointer-events: none;
 }
+
+/* Hide scrollbar visually while keeping scroll (used in DM thread) */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

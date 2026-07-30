@@ -9,12 +9,16 @@ import {
   BoardIcon,
   PenSquareIcon,
   UserIcon,
+  UsersIcon,
+  SendIcon,
 } from '@/components/ui/icons'
 
 const items = [
   { href: '/', label: '홈', Icon: HomeIcon },
   { href: '/board', label: '게시판', Icon: BoardIcon },
   { href: '/post/new', label: '글쓰기', Icon: PenSquareIcon },
+  { href: '/friends', label: '친구', Icon: UsersIcon },
+  { href: '/messages', label: '메시지', Icon: SendIcon },
   { href: '/me', label: '내 정보', Icon: UserIcon },
 ] as const
 
