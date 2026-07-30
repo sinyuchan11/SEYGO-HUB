@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { PostListItem } from '@/components/post/PostListItem'
 import { extractThumb, toExcerpt } from '@/lib/postPreview'
 import { ZoomableImage } from '@/components/ui/ZoomableImage'
-import { FlameIcon, ClockIcon, UtensilsIcon, CalendarIcon } from '@/components/ui/icons'
+import { FlameIcon, ClockIcon, UtensilsIcon, CalendarIcon, MegaphoneIcon } from '@/components/ui/icons'
 
 type AuthorRel = { nickname: string | null; avatar_url: string | null } | null
 type PostRow = {
@@ -33,6 +33,8 @@ export default async function HomePage() {
     .select('key, title, body, image_url')
   const meal = infoCards?.find((c) => c.key === 'meal') ?? null
   const schedule = infoCards?.find((c) => c.key === 'schedule') ?? null
+  const notice = infoCards?.find((c) => c.key === 'notice') ?? null
+  const hasNotice = !!(notice && (notice.body || notice.image_url))
 
   const { data: posts } = await supabase
     .from('posts')
@@ -99,6 +101,28 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* 공지 (admin-managed via /admin/info; shown when there's content) */}
+      {(hasNotice || isAdmin) && (
+        <section>
+          <div className="mb-2 flex items-center justify-between">
+            <h3 className="flex items-center gap-1.5 text-sm font-bold text-foreground">
+              <MegaphoneIcon size={16} className="text-primary-600" /> 공지
+            </h3>
+            {isAdmin && (
+              <Link href="/admin/info" className="text-xs font-medium text-primary-600 hover:underline">
+                편집
+              </Link>
+            )}
+          </div>
+          <InfoCard
+            icon={<MegaphoneIcon size={18} className="text-primary-600" />}
+            title={notice?.title ?? '공지'}
+            body={notice?.body ?? null}
+            imageUrl={notice?.image_url ?? null}
+          />
+        </section>
+      )}
 
       {/* Search */}
       <form action="/board" method="get">

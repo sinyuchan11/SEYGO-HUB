@@ -5,12 +5,12 @@ describe('parseBoard', () => {
   it('accepts valid board keys', () => {
     expect(parseBoard('free')).toBe('free')
     expect(parseBoard('qna')).toBe('qna')
-    expect(parseBoard('notice')).toBe('notice')
   })
 
-  it('defaults to all for unknown/undefined/anon', () => {
+  it('defaults to all for unknown/undefined/notice(deprecated)/anon', () => {
     expect(parseBoard(undefined)).toBe('all')
     expect(parseBoard('')).toBe('all')
+    expect(parseBoard('notice')).toBe('all')
     expect(parseBoard('anon')).toBe('all')
     expect(parseBoard('garbage')).toBe('all')
   })
@@ -28,9 +28,8 @@ describe('boardHeading', () => {
 })
 
 describe('boardEmptyText', () => {
-  it('adapts to qna and notice', () => {
+  it('adapts to qna', () => {
     expect(boardEmptyText('qna')).toContain('질문')
-    expect(boardEmptyText('notice')).toContain('공지')
   })
 
   it('falls back for free/all', () => {

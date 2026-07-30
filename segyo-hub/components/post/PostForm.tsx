@@ -1,15 +1,15 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { canModerate, type UserRole } from '@/lib/permissions'
 import { buildCheckText, checkContainsProfanity } from '@/lib/profanity'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/cn'
 import { RichEditor } from '@/components/post/RichEditor'
 
-type BoardKind = 'free' | 'qna' | 'notice'
+// 공지는 글쓰기로 작성하지 않는다(관리자 전용 info_cards로 이동). 여기선 자유/질문만.
+type BoardKind = 'free' | 'qna'
 
 const BOARD_OPTIONS: { value: BoardKind; label: string }[] = [
   { value: 'free', label: '자유게시판' },
@@ -30,30 +30,6 @@ export function PostForm() {
   const [warning, setWarning] = useState<string | null>(null)
   const [warned, setWarned] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [userRole, setUserRole] = useState<UserRole | null>(null)
-
-  // Fetch current user role to conditionally show 공지 option
-  useEffect(() => {
-    async function fetchRole() {
-      const supabase = createClient()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!user) return
-      const { data } = await supabase
-        .from('profiles')
-        .select('role, timeout_until')
-        .eq('id', user.id)
-        .single()
-      if (data) setUserRole(data.role as UserRole)
-    }
-    fetchRole()
-  }, [])
-
-  const boardOptions =
-    userRole && canModerate({ role: userRole, timeout_until: null })
-      ? [...BOARD_OPTIONS, { value: 'notice' as BoardKind, label: '공지' }]
-      : BOARD_OPTIONS
 
   // 제목/내용이 바뀌면 이전 비속어 경고를 초기화한다 (변경분 재검사 유도).
   function clearWarning() {
@@ -141,7 +117,7 @@ export function PostForm() {
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-muted-fg">게시판</span>
           <div className="flex overflow-hidden rounded-lg border border-border">
-            {boardOptions.map((opt) => (
+            {BOARD_OPTIONS.map((opt) => (
               <button
                 key={opt.value}
                 type="button"

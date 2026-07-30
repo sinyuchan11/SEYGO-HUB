@@ -10,6 +10,7 @@ import {
   House,
   LayoutGrid,
   List,
+  Megaphone,
   MessageCircle,
   MessagesSquare,
   Moon,
@@ -58,6 +59,7 @@ export const FlameIcon = icon(Flame, 'FlameIcon')
 export const ClockIcon = icon(Clock, 'ClockIcon')
 export const UtensilsIcon = icon(Utensils, 'UtensilsIcon')
 export const CalendarIcon = icon(Calendar, 'CalendarIcon')
+export const MegaphoneIcon = icon(Megaphone, 'MegaphoneIcon')
 export const MessageIcon = icon(MessageCircle, 'MessageIcon')
 export const ReplyIcon = icon(Reply, 'ReplyIcon')
 export const BellIcon = icon(Bell, 'BellIcon')

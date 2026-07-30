@@ -37,7 +37,7 @@ export default async function AdminInfoPage() {
         </Link>
         <div>
           <h2 className="text-lg font-bold text-foreground">오늘의 정보 편집</h2>
-          <p className="text-xs text-muted-fg">홈 화면의 식단표·일정표 내용을 관리해요.</p>
+          <p className="text-xs text-muted-fg">홈 화면의 공지·식단표·일정표 내용을 관리해요.</p>
         </div>
       </div>
 
