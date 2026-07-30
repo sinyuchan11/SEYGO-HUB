@@ -6,6 +6,7 @@ import { resolveFriendState, type FriendshipRow } from '@/lib/friends'
 import { ProfileHeader } from '@/components/profile/ProfileHeader'
 import { ProfileAbout } from '@/components/profile/ProfileAbout'
 import { FriendButton } from '@/components/friends/FriendButton'
+import { MessageButton } from '@/components/dm/MessageButton'
 import { Card } from '@/components/ui/Card'
 
 export default async function UserProfilePage({
@@ -43,13 +44,17 @@ export default async function UserProfilePage({
     .maybeSingle<FriendshipRow>()
 
   const state = resolveFriendState(rel ?? null, user.id)
+  const { data: canDm } = await supabase.rpc('can_dm', { other: id })
 
   return (
     <div className="space-y-4 px-3 py-2 pb-24 md:pb-8">
       <ProfileHeader
         profile={profile}
         actionSlot={
-          <FriendButton targetId={id} initialState={state} friendshipId={rel?.id ?? null} />
+          <div className="flex gap-2">
+            {canDm === true && <MessageButton targetId={id} />}
+            <FriendButton targetId={id} initialState={state} friendshipId={rel?.id ?? null} />
+          </div>
         }
       />
       <ProfileAbout profile={profile} />

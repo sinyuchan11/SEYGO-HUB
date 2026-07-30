@@ -75,6 +75,9 @@ export function TopBar({
               <Link href="/friends">친구</Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
+              <Link href="/messages">메시지</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
               <Link href="/notifications">알림</Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
