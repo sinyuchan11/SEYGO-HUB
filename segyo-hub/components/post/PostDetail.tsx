@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { CommentTree, type CommentNode } from '@/components/comment/CommentTree'
 import { LikeButton } from '@/components/reactions/LikeButton'
@@ -150,7 +151,13 @@ export function PostDetail({ data }: { data: PostDetailData }) {
           </DropdownMenu>
         </div>
         <div className="mt-1 flex gap-2 text-xs text-muted-fg">
-          <span>{data.isAnonymous ? '익명' : (data.authorNickname ?? '?')}</span>
+          {data.isAnonymous ? (
+            <span>익명</span>
+          ) : (
+            <Link href={`/u/${data.authorId}`} className="font-medium text-foreground hover:text-primary-600 hover:underline">
+              {data.authorNickname ?? '?'}
+            </Link>
+          )}
           <span suppressHydrationWarning>{timeAgo(data.createdAt)}</span>
         </div>
         <div

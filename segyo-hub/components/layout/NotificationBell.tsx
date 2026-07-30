@@ -6,25 +6,22 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { timeAgo } from '@/lib/time'
 import { cn } from '@/lib/cn'
-import { MessageIcon, ReplyIcon, BellIcon, ShieldAlertIcon } from '@/components/ui/icons'
+import { MessageIcon, ReplyIcon, BellIcon, ShieldAlertIcon, UserIcon } from '@/components/ui/icons'
+import { NOTIF_LABELS, notificationHref, type NotifKind, type NotifPayload } from '@/lib/notifications'
 
 type Notif = {
   id: number
-  kind: 'comment_on_post' | 'reply_on_comment' | 'profanity_evasion'
-  payload: { post_id: number; comment_id?: number; parent_comment_id?: number; actor_id: string }
+  kind: NotifKind
+  payload: NotifPayload
   read_at: string | null
   created_at: string
 }
 
-const LABELS: Record<Notif['kind'], string> = {
-  comment_on_post: '내 글에 새 댓글이 달렸어요',
-  reply_on_comment: '내 댓글에 답글이 달렸어요',
-  profanity_evasion: '비속어 우회가 의심되는 글이 등록됐어요',
-}
-
-function KindIcon({ kind }: { kind: Notif['kind'] }) {
+function KindIcon({ kind }: { kind: NotifKind }) {
   if (kind === 'profanity_evasion')
     return <ShieldAlertIcon size={18} className="mt-0.5 shrink-0 text-danger" />
+  if (kind === 'friend_request' || kind === 'friend_accept')
+    return <UserIcon size={18} className="mt-0.5 shrink-0 text-primary-600" />
   const Icon = kind === 'reply_on_comment' ? ReplyIcon : MessageIcon
   return <Icon size={18} className="mt-0.5 shrink-0 text-primary-600" />
 }
@@ -84,7 +81,7 @@ export function NotificationBell() {
         ),
       )
     }
-    router.push(`/post/${n.payload.post_id}`)
+    router.push(notificationHref(n.kind, n.payload))
   }
 
   return (
@@ -159,7 +156,7 @@ export function NotificationBell() {
                   >
                     <KindIcon kind={n.kind} />
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm text-foreground">{LABELS[n.kind]}</p>
+                      <p className="text-sm text-foreground">{NOTIF_LABELS[n.kind]}</p>
                       <p
                         className="mt-0.5 text-xs text-muted-fg"
                         suppressHydrationWarning

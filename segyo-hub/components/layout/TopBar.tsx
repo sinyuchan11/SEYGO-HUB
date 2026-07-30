@@ -72,6 +72,9 @@ export function TopBar({
               <Link href="/me">내 프로필</Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
+              <Link href="/friends">친구</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
               <Link href="/notifications">알림</Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
