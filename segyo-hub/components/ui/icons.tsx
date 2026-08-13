@@ -1,5 +1,6 @@
 import {
   ArrowRight,
+  AtSign,
   Bell,
   Calendar,
   Check,
@@ -63,6 +64,7 @@ export const MegaphoneIcon = icon(Megaphone, 'MegaphoneIcon')
 export const MessageIcon = icon(MessageCircle, 'MessageIcon')
 export const ReplyIcon = icon(Reply, 'ReplyIcon')
 export const BellIcon = icon(Bell, 'BellIcon')
+export const AtSignIcon = icon(AtSign, 'AtSignIcon')
 export const SearchIcon = icon(Search, 'SearchIcon')
 export const PenIcon = icon(Pencil, 'PenIcon')
 export const FileTextIcon = icon(FileText, 'FileTextIcon')

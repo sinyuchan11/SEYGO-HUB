@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react'
+import Link from 'next/link'
 import { timeAgo } from '@/lib/time'
 import { Avatar } from '@/components/ui/Avatar'
+import { splitMentions, type MentionMember } from '@/lib/mentions'
 
 export type CommentNode = {
   id: number
@@ -12,11 +14,34 @@ export type CommentNode = {
   parentId: number | null
 }
 
+/** Render comment text with `@닉네임` turned into profile links. */
+function CommentText({ text, members }: { text: string; members: MentionMember[] }) {
+  return (
+    <>
+      {splitMentions(text, members).map((seg, i) =>
+        seg.type === 'text' ? (
+          <span key={i}>{seg.value}</span>
+        ) : (
+          <Link
+            key={i}
+            href={`/u/${seg.id}`}
+            className="font-medium text-primary-600 hover:underline"
+          >
+            @{seg.nickname}
+          </Link>
+        )
+      )}
+    </>
+  )
+}
+
 export function CommentTree({
   comments,
+  members = [],
   renderActions,
 }: {
   comments: CommentNode[]
+  members?: MentionMember[]
   renderActions?: (c: CommentNode) => ReactNode
 }) {
   const tops = comments.filter((c) => c.parentId === null)
@@ -33,12 +58,12 @@ export function CommentTree({
     <ul className="divide-y divide-border bg-surface">
       {tops.map((c) => (
         <li key={c.id} className="px-4 py-4">
-          <CommentBlock c={c} actions={renderActions?.(c)} />
+          <CommentBlock c={c} members={members} actions={renderActions?.(c)} />
           {(repliesByParent.get(c.id) ?? []).length > 0 && (
             <ul className="mt-3 space-y-3 border-l-2 border-border pl-4">
               {(repliesByParent.get(c.id) ?? []).map((r) => (
                 <li key={r.id}>
-                  <CommentBlock c={r} actions={renderActions?.(r)} reply />
+                  <CommentBlock c={r} members={members} actions={renderActions?.(r)} reply />
                 </li>
               ))}
             </ul>
@@ -56,10 +81,12 @@ export function CommentTree({
 
 function CommentBlock({
   c,
+  members,
   actions,
   reply,
 }: {
   c: CommentNode
+  members: MentionMember[]
   actions?: ReactNode
   reply?: boolean
 }) {
@@ -80,7 +107,9 @@ function CommentBlock({
             {timeAgo(c.createdAt)}
           </span>
         </div>
-        <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">{c.content}</p>
+        <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">
+          <CommentText text={c.content} members={members} />
+        </p>
         {actions && <div className="mt-2">{actions}</div>}
       </div>
     </div>

@@ -12,10 +12,23 @@ import TextAlign from '@tiptap/extension-text-align'
 import Placeholder from '@tiptap/extension-placeholder'
 import { useRef, useState } from 'react'
 import { cn } from '@/lib/cn'
+import { activeMentionQuery, filterMembers, type MentionMember } from '@/lib/mentions'
+import { MentionSuggestions, type MentionCandidate } from '@/components/mention/MentionSuggestions'
 
 interface RichEditorProps {
   value: string
   onChange: (html: string) => void
+  members?: MentionMember[]
+}
+
+/** Open `@` autocomplete: the candidates, the range to replace and where to draw. */
+type MentionState = {
+  items: MentionCandidate[]
+  index: number
+  from: number
+  to: number
+  top: number
+  left: number
 }
 
 /** Shared 24x24 stroke-icon wrapper (currentColor). */
@@ -87,8 +100,13 @@ function ToolbarButton({
 
 const Divider = () => <span className="mx-1 my-1 w-px self-stretch bg-border" />
 
-export function RichEditor({ value, onChange }: RichEditorProps) {
+export function RichEditor({ value, onChange, members = [] }: RichEditorProps) {
   const imageInputRef = useRef<HTMLInputElement>(null)
+  const surfaceRef = useRef<HTMLDivElement>(null)
+  const editorRef = useRef<ReturnType<typeof useEditor>>(null)
+  const [mention, setMention] = useState<MentionState | null>(null)
+  const mentionRef = useRef<MentionState | null>(null)
+  mentionRef.current = mention
   const [linkOpen, setLinkOpen] = useState(false)
   const [linkUrl, setLinkUrl] = useState('')
   const [uploadError, setUploadError] = useState<string | null>(null)
@@ -111,10 +129,80 @@ export function RichEditor({ value, onChange }: RichEditorProps) {
     content: value,
     onUpdate({ editor }) {
       onChange(editor.getHTML())
+      refreshMention(editor)
+    },
+    onSelectionUpdate({ editor }) {
+      refreshMention(editor)
+    },
+    editorProps: {
+      // 목록이 열려 있는 동안에는 위/아래·Enter를 에디터가 아니라 목록이 먹는다.
+      handleKeyDown(_view, event) {
+        const m = mentionRef.current
+        if (!m) return false
+        if (event.key === 'ArrowDown') {
+          setMention({ ...m, index: (m.index + 1) % m.items.length })
+          return true
+        }
+        if (event.key === 'ArrowUp') {
+          setMention({ ...m, index: (m.index - 1 + m.items.length) % m.items.length })
+          return true
+        }
+        if (event.key === 'Enter' || event.key === 'Tab') {
+          pickMention(m.items[m.index])
+          return true
+        }
+        if (event.key === 'Escape') {
+          setMention(null)
+          return true
+        }
+        return false
+      },
     },
   })
+  editorRef.current = editor
 
   if (!editor) return null
+
+  /** Recompute the `@` query from the text before the caret in the current block. */
+  function refreshMention(ed: NonNullable<ReturnType<typeof useEditor>>) {
+    if (members.length === 0) return setMention(null)
+    const { selection, doc } = ed.state
+    if (!selection.empty) return setMention(null)
+
+    const caret = selection.from
+    const blockStart = doc.resolve(caret).start()
+    // 인라인 노드를 한 글자로 치환해 오프셋이 1:1로 유지되게 한다.
+    const textBefore = doc.textBetween(blockStart, caret, '\n', '￼')
+
+    const query = activeMentionQuery(textBefore, textBefore.length)
+    if (!query) return setMention(null)
+
+    const items = filterMembers(members, query.query)
+    if (items.length === 0) return setMention(null)
+
+    const coords = ed.view.coordsAtPos(caret)
+    const box = surfaceRef.current?.getBoundingClientRect()
+    setMention({
+      items,
+      index: 0,
+      from: blockStart + query.start,
+      to: caret,
+      top: coords.bottom - (box?.top ?? 0) + 4,
+      left: coords.left - (box?.left ?? 0),
+    })
+  }
+
+  function pickMention(item: MentionCandidate) {
+    const ed = editorRef.current
+    const m = mentionRef.current
+    if (!ed || !m) return
+    ed
+      .chain()
+      .focus()
+      .insertContentAt({ from: m.from, to: m.to }, { type: 'text', text: `@${item.nickname} ` })
+      .run()
+    setMention(null)
+  }
 
   function openLinkEditor() {
     const prev = editor!.getAttributes('link').href as string | undefined
@@ -348,7 +436,17 @@ export function RichEditor({ value, onChange }: RichEditorProps) {
       )}
 
       {/* Editor surface */}
-      <EditorContent editor={editor} className="min-h-[320px] px-4 py-3" />
+      <div ref={surfaceRef} className="relative">
+        <EditorContent editor={editor} className="min-h-[320px] px-4 py-3" />
+        {mention && (
+          <MentionSuggestions
+            items={mention.items}
+            activeIndex={mention.index}
+            onPick={pickMention}
+            style={{ top: mention.top, left: mention.left }}
+          />
+        )}
+      </div>
     </div>
   )
 }

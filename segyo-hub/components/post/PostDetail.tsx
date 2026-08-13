@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -16,6 +16,13 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/compone
 import { ReportDialog } from '@/components/report/ReportDialog'
 import { timeAgo } from '@/lib/time'
 import { checkContainsProfanity } from '@/lib/profanity'
+import {
+  activeMentionQuery,
+  filterMembers,
+  linkifyMentionsHtml,
+  type MentionMember,
+} from '@/lib/mentions'
+import { MentionSuggestions } from '@/components/mention/MentionSuggestions'
 import DOMPurify from 'isomorphic-dompurify'
 
 export type PostDetailData = {
@@ -32,6 +39,7 @@ export type PostDetailData = {
   initialPostLikeCount: number
   commentLikeMap: Record<number, { liked: boolean; count: number }>
   comments: CommentNode[]
+  members: MentionMember[]
 }
 
 export function PostDetail({ data }: { data: PostDetailData }) {
@@ -44,6 +52,71 @@ export function PostDetail({ data }: { data: PostDetailData }) {
   const [commentWarned, setCommentWarned] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [reportOpen, setReportOpen] = useState(false)
+
+  // 멘션 자동완성: caret 위치가 있어야 `@질의`를 잡을 수 있어 함께 추적한다.
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [caret, setCaret] = useState(0)
+  const [mentionIndex, setMentionIndex] = useState(0)
+  const [mentionClosed, setMentionClosed] = useState(false)
+
+  const mentionQuery = useMemo(() => activeMentionQuery(text, caret), [text, caret])
+  const mentionItems = useMemo(
+    () => (mentionQuery && !mentionClosed ? filterMembers(data.members, mentionQuery.query) : []),
+    [mentionQuery, mentionClosed, data.members]
+  )
+
+  const body = useMemo(
+    () =>
+      linkifyMentionsHtml(
+        DOMPurify.sanitize(data.content, { USE_PROFILES: { html: true } }),
+        data.members
+      ),
+    [data.content, data.members]
+  )
+
+  function pickMention(item: { id: string; nickname: string }) {
+    if (!mentionQuery) return
+    const inserted = `@${item.nickname} `
+    const before = text.slice(0, mentionQuery.start)
+    const next = before + inserted + text.slice(caret)
+    const nextCaret = before.length + inserted.length
+    setText(next)
+    setCaret(nextCaret)
+    setMentionIndex(0)
+    requestAnimationFrame(() => {
+      inputRef.current?.focus()
+      inputRef.current?.setSelectionRange(nextCaret, nextCaret)
+    })
+  }
+
+  function onCommentKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (mentionItems.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        setMentionIndex((i) => (i + 1) % mentionItems.length)
+        return
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        setMentionIndex((i) => (i - 1 + mentionItems.length) % mentionItems.length)
+        return
+      }
+      if (e.key === 'Enter' || e.key === 'Tab') {
+        e.preventDefault()
+        pickMention(mentionItems[mentionIndex])
+        return
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        setMentionClosed(true)
+        return
+      }
+    }
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      submitComment()
+    }
+  }
 
   async function submitComment() {
     if (!text.trim()) return
@@ -162,7 +235,7 @@ export function PostDetail({ data }: { data: PostDetailData }) {
         </div>
         <div
           className="post-content mt-3"
-          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(data.content, { USE_PROFILES: { html: true } }) }}
+          dangerouslySetInnerHTML={{ __html: body }}
         />
         <div className="mt-3 flex items-center gap-3">
           <LikeButton
@@ -215,6 +288,7 @@ export function PostDetail({ data }: { data: PostDetailData }) {
 
       <CommentTree
         comments={data.comments}
+        members={data.members}
         renderActions={(c) => {
           const lk = data.commentLikeMap[c.id] ?? { liked: false, count: 0 }
           return (
@@ -250,20 +324,34 @@ export function PostDetail({ data }: { data: PostDetailData }) {
           </p>
         )}
         <div className="flex gap-2">
-          <input
-            type="text"
-            placeholder={replyTo !== null ? '답글을 입력하세요' : '댓글을 입력하세요'}
-            value={text}
-            onChange={(e) => {
-              setText(e.target.value)
-              if (commentWarned || commentWarning) {
-                setCommentWarned(false)
-                setCommentWarning(null)
-              }
-            }}
-            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitComment() } }}
-            className="flex-1 rounded-xl border border-border bg-canvas px-3 py-2 text-sm text-foreground placeholder:text-muted-fg focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-200"
-          />
+          <div className="relative flex-1">
+            <MentionSuggestions
+              items={mentionItems}
+              activeIndex={mentionIndex}
+              onPick={pickMention}
+              className="bottom-full left-0 mb-1"
+            />
+            <input
+              ref={inputRef}
+              type="text"
+              placeholder={replyTo !== null ? '답글을 입력하세요' : '댓글을 입력하세요 (@로 멘션)'}
+              value={text}
+              onChange={(e) => {
+                setText(e.target.value)
+                setCaret(e.target.selectionStart ?? e.target.value.length)
+                setMentionClosed(false)
+                setMentionIndex(0)
+                if (commentWarned || commentWarning) {
+                  setCommentWarned(false)
+                  setCommentWarning(null)
+                }
+              }}
+              onKeyUp={(e) => setCaret(e.currentTarget.selectionStart ?? 0)}
+              onClick={(e) => setCaret(e.currentTarget.selectionStart ?? 0)}
+              onKeyDown={onCommentKeyDown}
+              className="w-full rounded-xl border border-border bg-canvas px-3 py-2 text-sm text-foreground placeholder:text-muted-fg focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-200"
+            />
+          </div>
           <button
             onClick={submitComment}
             disabled={submitting || !text.trim()}

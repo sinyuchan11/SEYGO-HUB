@@ -1,6 +1,11 @@
 import { PostForm } from '@/components/post/PostForm'
+import { createClient } from '@/lib/supabase/server'
+import { fetchMentionMembers } from '@/lib/members'
 
-export default function NewPostPage() {
+export default async function NewPostPage() {
+  const supabase = await createClient()
+  const members = await fetchMentionMembers(supabase)
+
   return (
     <div className="min-h-screen bg-canvas py-8 px-4">
       <div className="max-w-3xl mx-auto">
@@ -9,7 +14,7 @@ export default function NewPostPage() {
           <p className="mt-1 text-sm text-muted-fg">생각을 자유롭게 적어보세요</p>
         </div>
         <div className="rounded-2xl border border-border bg-surface shadow-sm px-6 py-6">
-          <PostForm />
+          <PostForm members={members} />
         </div>
       </div>
     </div>

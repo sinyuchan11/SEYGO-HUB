@@ -7,6 +7,7 @@ import { buildCheckText, checkContainsProfanity } from '@/lib/profanity'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/cn'
 import { RichEditor } from '@/components/post/RichEditor'
+import type { MentionMember } from '@/lib/mentions'
 
 // 공지는 글쓰기로 작성하지 않는다(관리자 전용 info_cards로 이동). 여기선 자유/질문만.
 type BoardKind = 'free' | 'qna'
@@ -20,7 +21,7 @@ function stripHtml(html: string) {
   return html.replace(/<[^>]*>/g, '').trim()
 }
 
-export function PostForm() {
+export function PostForm({ members = [] }: { members?: MentionMember[] }) {
   const router = useRouter()
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
@@ -163,6 +164,7 @@ export function PostForm() {
 
       {/* Rich editor */}
       <RichEditor
+        members={members}
         value={content}
         onChange={(v) => {
           setContent(v)

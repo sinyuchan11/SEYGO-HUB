@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { timeAgo } from '@/lib/time'
 import { cn } from '@/lib/cn'
 import { Card } from '@/components/ui/Card'
-import { MessageIcon, ReplyIcon, BellIcon, ShieldAlertIcon, UserIcon } from '@/components/ui/icons'
+import { MessageIcon, ReplyIcon, BellIcon, ShieldAlertIcon, UserIcon, AtSignIcon } from '@/components/ui/icons'
 import { NOTIF_LABELS, notificationHref, type NotifKind, type NotifPayload } from '@/lib/notifications'
 
 type Notif = {
@@ -20,6 +20,8 @@ function KindIcon({ kind }: { kind: NotifKind }) {
     return <ShieldAlertIcon size={20} className="mt-0.5 shrink-0 text-danger" />
   if (kind === 'friend_request' || kind === 'friend_accept')
     return <UserIcon size={20} className="mt-0.5 shrink-0 text-primary-600" />
+  if (kind === 'mention')
+    return <AtSignIcon size={20} className="mt-0.5 shrink-0 text-primary-600" />
   const Icon = kind === 'reply_on_comment' ? ReplyIcon : MessageIcon
   return <Icon size={20} className="mt-0.5 shrink-0 text-primary-600" />
 }

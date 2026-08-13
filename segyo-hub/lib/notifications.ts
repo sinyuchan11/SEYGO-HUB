@@ -4,6 +4,7 @@ export type NotifKind =
   | 'profanity_evasion'
   | 'friend_request'
   | 'friend_accept'
+  | 'mention'
 
 export type NotifPayload = {
   post_id?: number
@@ -19,6 +20,7 @@ export const NOTIF_LABELS: Record<NotifKind, string> = {
   profanity_evasion: '비속어 우회가 의심되는 글이 등록됐어요',
   friend_request: '새 친구 요청이 왔어요',
   friend_accept: '친구 요청이 수락됐어요',
+  mention: '누가 나를 멘션했어요',
 }
 
 /** Where a notification should navigate when tapped. */

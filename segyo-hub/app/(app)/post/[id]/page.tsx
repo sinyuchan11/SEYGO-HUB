@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { PostDetail, type PostDetailData } from '@/components/post/PostDetail'
 import { canModerate, type UserRole } from '@/lib/permissions'
+import { fetchMentionMembers } from '@/lib/members'
 
 export default async function PostPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -50,6 +51,8 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
     .eq('target_type', 'comment')
     .in('target_id', commentIds.length > 0 ? commentIds : [-1])
 
+  const members = await fetchMentionMembers(supabase)
+
   const initialPostLikeCount = (postLikes ?? []).length
   const initialPostLiked = (postLikes ?? []).some((r: any) => r.user_id === user.id)
 
@@ -75,6 +78,7 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
     initialPostLiked,
     initialPostLikeCount,
     commentLikeMap,
+    members,
     comments: (comments ?? []).map((c: any) => ({
       id: c.id,
       authorNickname: c.author?.nickname ?? null,
