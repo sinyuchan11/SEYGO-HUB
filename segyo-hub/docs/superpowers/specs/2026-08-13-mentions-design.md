@@ -22,8 +22,10 @@
   - 닉네임은 `text unique`일 뿐 형식 제약이 없다(공백·특수문자 가능).
   - 최장일치라 `@테스트님` → `테스트` 멘션 + `님`은 평문이 된다(한국어 조사 대응).
   - `@`는 문자열 시작이거나 앞이 공백/여는 태그여야 한다 → 이메일 `a@b.com` 오탐 방지.
-- **알림 중복 방지**: 한 글/댓글당 사용자별 1건. 본인 멘션은 알림 없음.
-  이미 `comment_on_post`/`reply_on_comment` 알림을 받는 사람에게는 `mention`을 추가로 보내지 않는다.
+- **알림**: 한 글/댓글당 사용자별 1건. 본인 멘션은 알림 없음.
+  - 처음엔 이미 `comment_on_post`/`reply_on_comment` 알림을 받는 사람에게 `mention`을 생략했는데,
+    "내 글에 달린 댓글에서 나를 멘션"하는 흔한 경우에 멘션 알림이 안 보여 멘션이 묻혔다.
+    → `0022`에서 되돌려, 작성자 본인만 제외하고 **항상 발송**한다.
 - **익명 글/댓글**: 멘션 알림은 정상 발송하되 `payload.actor_id`를 넣지 않는다(익명성 유지).
 - 멘션된 닉네임은 `/u/[id]` 링크 + `text-primary-600`으로 표시.
 
@@ -37,7 +39,7 @@
   - `exclude_ids`(작성자, 이미 다른 알림을 받는 사람) 제외.
 - 트리거:
   - `posts` after insert → `mentioned_profile_ids(new.body, array[new.author_id])`
-  - `comments` after insert → 기존 `notify_on_comment`가 알린 대상까지 exclude에 포함
+  - `comments` after insert → 작성자만 exclude (`0022`)
   - payload: `{post_id, comment_id?, actor_id?}` — 익명이면 `actor_id` 생략
 
 ## `lib/mentions.ts` (순수, 테스트 대상)

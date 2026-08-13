@@ -40,8 +40,9 @@
 - API: `/api/upload`, `/api/admin/info-image`, `/api/admin/users/[id]/role`, `/api/notifications/read`
 
 ## 마이그레이션 현황 (라이브 적용됨)
-`0001`~`0021`. 최근: `0017` friendships, `0018` dm, `0019` dm 읽음 표시, `0020` 공지 info_card,
-`0021` 멘션(`mention` 알림 종류 + 닉네임 매칭 함수 + 글/댓글 트리거).
+`0001`~`0022`. 최근: `0018` dm, `0019` dm 읽음 표시, `0020` 공지 info_card,
+`0021` 멘션(`mention` 알림 종류 + 닉네임 매칭 함수 + 글/댓글 트리거),
+`0022` 멘션 알림을 항상 발송(댓글 알림과 중복 생략하던 규칙 제거).
 
 ## 테스트
 `npm test` (vitest). `lib/` 순수 로직(board·dm·friends·permissions·profanity·profile)과 일부 UI 컴포넌트에 테스트가 있다. 로직 추가 시 같이 붙일 것.
