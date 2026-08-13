@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/cn'
+import { useUnreadDmCount } from '@/lib/useUnreadDm'
+import { CountBadge } from '@/components/ui/CountBadge'
 import {
   HomeIcon,
   BoardIcon,
@@ -23,6 +25,7 @@ const tabs = [
 
 export function BottomNav() {
   const pathname = usePathname()
+  const unreadDm = useUnreadDmCount()
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] md:hidden">
       {tabs.map(({ href, label, Icon }) => {
@@ -40,7 +43,12 @@ export function BottomNav() {
               active ? 'text-primary-600' : 'text-muted-fg',
             )}
           >
-            <Icon size={20} className={active ? 'stroke-[2.5]' : undefined} />
+            <span className="relative">
+              <Icon size={20} className={active ? 'stroke-[2.5]' : undefined} />
+              {href === '/messages' && (
+                <CountBadge count={unreadDm} className="absolute -right-2.5 -top-1.5" />
+              )}
+            </span>
             <span className={cn('text-[11px]', active && 'font-semibold')}>
               {label}
             </span>

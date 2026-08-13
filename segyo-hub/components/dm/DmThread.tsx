@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Avatar } from '@/components/ui/Avatar'
 import { formatClock } from '@/lib/time'
 import { cn } from '@/lib/cn'
+import { refreshUnreadDmCount } from '@/lib/useUnreadDm'
 
 export type DmMessage = { id: number; sender_id: string; body: string; created_at: string }
 
@@ -34,6 +35,8 @@ export function DmThread({
       { conversation_id: conversationId, user_id: myId, last_read_at: new Date().toISOString() },
       { onConflict: 'conversation_id,user_id' },
     )
+    // 읽고 나면 네비게이션 배지가 바로 줄어야 한다.
+    refreshUnreadDmCount()
   }
 
   useEffect(() => {

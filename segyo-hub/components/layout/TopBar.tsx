@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/Input'
 import { Avatar } from '@/components/ui/Avatar'
 import { NotificationBell } from './NotificationBell'
 import { ThemeToggle } from './ThemeToggle'
+import { useUnreadDmCount } from '@/lib/useUnreadDm'
+import { CountBadge } from '@/components/ui/CountBadge'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -26,6 +28,7 @@ export function TopBar({
   role: string | null
 }) {
   const router = useRouter()
+  const unreadDm = useUnreadDmCount()
   const isStaff = role === 'admin' || role === 'moderator'
   const name = nickname ?? '나'
 
@@ -75,7 +78,10 @@ export function TopBar({
               <Link href="/friends">친구</Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href="/messages">메시지</Link>
+              <Link href="/messages" className="flex items-center gap-2">
+                메시지
+                <CountBadge count={unreadDm} className="ml-auto" />
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href="/notifications">알림</Link>

@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/cn'
 import { TooltipProvider, Tooltip } from '@/components/ui/Tooltip'
+import { useUnreadDmCount } from '@/lib/useUnreadDm'
+import { CountBadge } from '@/components/ui/CountBadge'
 import {
   HomeIcon,
   BoardIcon,
@@ -24,6 +26,7 @@ const items = [
 
 export function LeftRail() {
   const pathname = usePathname()
+  const unreadDm = useUnreadDmCount()
   return (
     <TooltipProvider delayDuration={200}>
       <nav className="hidden shrink-0 py-2 md:block">
@@ -41,13 +44,16 @@ export function LeftRail() {
                     aria-label={label}
                     aria-current={active ? 'page' : undefined}
                     className={cn(
-                      'flex h-10 w-10 items-center justify-center rounded-lg transition-colors',
+                      'relative flex h-10 w-10 items-center justify-center rounded-lg transition-colors',
                       active
                         ? 'bg-primary-100 text-primary-700'
                         : 'text-muted-fg hover:bg-muted hover:text-foreground',
                     )}
                   >
                     <Icon size={20} />
+                    {href === '/messages' && (
+                      <CountBadge count={unreadDm} className="absolute right-1 top-1" />
+                    )}
                   </Link>
                 </Tooltip>
               </li>
