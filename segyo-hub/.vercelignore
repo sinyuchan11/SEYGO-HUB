@@ -1,0 +1,9 @@
+# 환경변수는 Vercel 프로젝트 설정에서 주입된다. 로컬 .env는 올리지 않는다.
+.env
+.env.*
+
+# 빌드 산출물·로컬 도구 상태
+.next
+tsconfig.tsbuildinfo
+supabase/.temp
+docs
