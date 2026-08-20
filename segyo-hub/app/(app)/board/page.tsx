@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { PostListItem, PostListRow } from '@/components/post/PostListItem'
 import { extractThumb, toExcerpt } from '@/lib/postPreview'
@@ -46,6 +47,9 @@ export default async function BoardPage({
   })
 
   const items = (data ?? []) as BoardRow[]
+  // 총계는 행에 실려 온다. 범위 밖 페이지는 0행이라 총계도 못 받는데, 그대로 두면
+  // "아직 글이 없어요" 빈 화면에 페이지 네비게이션까지 사라져 돌아갈 길이 없어진다.
+  // (글이 지워져 마지막 페이지가 줄어든 뒤 새로고침하면 실제로 걸린다.)
   const total = items[0]?.total_count ?? 0
   const lastPage = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
@@ -60,6 +64,9 @@ export default async function BoardPage({
     if (pg > 1) p.set('page', String(pg))
     return `/board?${p.toString()}`
   }
+
+  // 범위 밖 페이지면 첫 페이지로 돌려보낸다 (위 total 주석 참고).
+  if (items.length === 0 && page > 1) redirect(href({ page: 1 }))
 
   const pill = (active: boolean) =>
     'rounded-full px-3 py-1.5 text-sm font-medium transition-colors ' +

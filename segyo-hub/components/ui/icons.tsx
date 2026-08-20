@@ -1,5 +1,4 @@
 import {
-  ArrowRight,
   AtSign,
   Bell,
   Calendar,
@@ -15,7 +14,6 @@ import {
   MessageCircle,
   MessagesSquare,
   Moon,
-  Pencil,
   Plus,
   Reply,
   Search,
@@ -27,7 +25,6 @@ import {
   UserRound,
   Users,
   Utensils,
-  X,
 } from 'lucide-react'
 import { cn } from '@/lib/cn'
 

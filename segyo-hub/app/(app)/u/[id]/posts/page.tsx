@@ -56,6 +56,10 @@ export default async function UserPostsPage({
   const total = count ?? 0
   const lastPage = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
+  // 범위 밖 페이지면 첫 페이지로. 그냥 두면 "아직 쓴 글이 없어요" 가 떠서
+  // 글이 있는데도 없는 것처럼 보인다.
+  if (page > lastPage) redirect(`/u/${id}/posts`)
+
   // 이 페이지에 실린 글만 세면 된다. 최신순 고정이라 잘린 집합에서 정렬할 일이 없다.
   const ids = list.map((p) => p.id)
   const [{ data: comments }, { data: likes }] = await Promise.all([
