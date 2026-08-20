@@ -14,6 +14,13 @@ export function timeAgo(iso: string): string {
   return new Date(iso).toLocaleDateString('ko-KR')
 }
 
+/** Short Korean date, e.g. "2026. 8. 20.". Use with suppressHydrationWarning. */
+export function formatDate(iso: string): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  return `${d.getFullYear()}. ${d.getMonth() + 1}. ${d.getDate()}.`
+}
+
 /** Korean clock time, e.g. "오후 3:24". Use with suppressHydrationWarning. */
 export function formatClock(iso: string): string {
   const d = new Date(iso)

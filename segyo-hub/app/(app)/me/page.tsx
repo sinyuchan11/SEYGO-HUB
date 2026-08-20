@@ -48,6 +48,7 @@ export default async function MePage() {
         <>
           <ProfileHeader
             profile={profile}
+            postsHref={`/u/${profile.id}/posts`}
             actionSlot={
               <Link
                 href="/me/edit"

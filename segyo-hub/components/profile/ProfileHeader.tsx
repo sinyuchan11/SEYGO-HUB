@@ -5,9 +5,11 @@ import type { ProfileWithStats } from '@/lib/profile'
 export function ProfileHeader({
   profile,
   actionSlot,
+  postsHref,
 }: {
   profile: ProfileWithStats
   actionSlot?: React.ReactNode
+  postsHref?: string
 }) {
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-surface">
@@ -42,6 +44,7 @@ export function ProfileHeader({
         <ProfileStats
           postCount={profile.post_count}
           likesReceived={profile.likes_received}
+          postsHref={postsHref}
           className="mt-3"
         />
       </div>

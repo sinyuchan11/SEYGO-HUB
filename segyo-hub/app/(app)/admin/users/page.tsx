@@ -25,7 +25,7 @@ export default async function AdminUsersPage() {
 
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, nickname, role, grade_class, created_at')
+    .select('id, nickname, role, grade_class, created_at, timeout_until')
     .order('created_at', { ascending: false })
 
   const rows = (profiles ?? []).map((p: any) => ({
@@ -35,6 +35,7 @@ export default async function AdminUsersPage() {
     role: p.role,
     grade_class: p.grade_class,
     created_at: p.created_at,
+    timeout_until: p.timeout_until,
   }))
 
   return (

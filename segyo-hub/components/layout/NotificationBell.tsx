@@ -46,9 +46,39 @@ export function NotificationBell() {
   }
 
   useEffect(() => {
+    // 폴링은 안전망으로 남기고, 실제 반영은 실시간으로 한다.
+    // (예전엔 폴링만 있어서 알림이 최대 30초 늦게 떴다.)
     load()
     const t = setInterval(load, 30_000)
-    return () => clearInterval(t)
+
+    const supabase = createClient()
+    let channel: ReturnType<typeof supabase.channel> | null = null
+    let cancelled = false
+
+    async function connect() {
+      // postgres_changes 에는 RLS 가 걸린다. 소켓에 토큰을 실어주지 않으면
+      // 구독은 성공한 것처럼 보이면서 이벤트가 하나도 오지 않는다.
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      if (cancelled) return
+      await supabase.realtime.setAuth(session?.access_token ?? null)
+      if (cancelled) return
+
+      channel = supabase
+        .channel('notifications-bell')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () =>
+          load(),
+        )
+        .subscribe()
+    }
+    void connect()
+
+    return () => {
+      cancelled = true
+      clearInterval(t)
+      if (channel) supabase.removeChannel(channel)
+    }
   }, [])
 
   // Close dropdown when clicking outside

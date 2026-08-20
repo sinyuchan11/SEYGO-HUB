@@ -50,6 +50,7 @@ export default async function UserProfilePage({
     <div className="space-y-4 px-3 py-2 pb-24 md:pb-8">
       <ProfileHeader
         profile={profile}
+        postsHref={`/u/${id}/posts`}
         actionSlot={
           <div className="flex gap-2">
             {canDm === true && <MessageButton targetId={id} />}

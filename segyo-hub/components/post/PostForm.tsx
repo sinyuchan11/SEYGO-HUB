@@ -21,12 +21,28 @@ function stripHtml(html: string) {
   return html.replace(/<[^>]*>/g, '').trim()
 }
 
-export function PostForm({ members = [] }: { members?: MentionMember[] }) {
+/** 수정 모드일 때 넘어오는 기존 글. 없으면 새 글 작성. */
+export type PostFormInitial = {
+  id: number
+  title: string
+  content: string
+  board: BoardKind
+  isAnonymous: boolean
+}
+
+export function PostForm({
+  members = [],
+  initial,
+}: {
+  members?: MentionMember[]
+  initial?: PostFormInitial
+}) {
   const router = useRouter()
-  const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
-  const [board, setBoard] = useState<BoardKind>('free')
-  const [isAnonymous, setIsAnonymous] = useState(false)
+  const editing = initial != null
+  const [title, setTitle] = useState(initial?.title ?? '')
+  const [content, setContent] = useState(initial?.content ?? '')
+  const [board, setBoard] = useState<BoardKind>(initial?.board ?? 'free')
+  const [isAnonymous, setIsAnonymous] = useState(initial?.isAnonymous ?? false)
   const [error, setError] = useState<string | null>(null)
   const [warning, setWarning] = useState<string | null>(null)
   const [warned, setWarned] = useState(false)
@@ -69,6 +85,32 @@ export function PostForm({ members = [] }: { members?: MentionMember[] }) {
     } = await supabase.auth.getUser()
     if (!user) {
       router.push('/login')
+      return
+    }
+
+    if (editing) {
+      const { data, error: updateError } = await supabase
+        .from('posts')
+        .update({
+          board,
+          title: title.trim(),
+          content,
+          is_anonymous: isAnonymous,
+        })
+        .eq('id', initial.id)
+        .select('id')
+        // RLS 가 막으면 0행이 돌아온다. maybeSingle 이라야 그 경우를 에러가 아닌
+        // null 로 받아서 아래에서 우리 문구로 안내할 수 있다.
+        .maybeSingle()
+
+      if (updateError || !data) {
+        setError(updateError?.message ?? '수정 권한이 없어요.')
+        setLoading(false)
+        return
+      }
+
+      router.push(`/post/${initial.id}`)
+      router.refresh()
       return
     }
 
@@ -187,7 +229,17 @@ export function PostForm({ members = [] }: { members?: MentionMember[] }) {
       )}
 
       {/* Submit */}
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        {editing && (
+          <Button
+            type="button"
+            variant="secondary"
+            size="lg"
+            onClick={() => router.push(`/post/${initial.id}`)}
+          >
+            취소
+          </Button>
+        )}
         <Button
           type="submit"
           variant="primary"
@@ -195,7 +247,17 @@ export function PostForm({ members = [] }: { members?: MentionMember[] }) {
           disabled={loading}
           className="min-w-[120px]"
         >
-          {loading ? '등록 중...' : warned ? '그대로 등록' : '등록'}
+          {loading
+            ? editing
+              ? '저장 중...'
+              : '등록 중...'
+            : warned
+              ? editing
+                ? '그대로 저장'
+                : '그대로 등록'
+              : editing
+                ? '저장'
+                : '등록'}
         </Button>
       </div>
     </form>

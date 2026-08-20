@@ -22,7 +22,7 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
   const { data: post } = await supabase
     .from('posts')
     .select(`
-      id, title, content, author_id, is_anonymous, created_at, deleted_at,
+      id, title, content, author_id, board, is_anonymous, created_at, deleted_at,
       author:profiles!posts_author_id_fkey ( nickname )
     `)
     .eq('id', postId)
@@ -74,6 +74,7 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
     isAnonymous: post.is_anonymous,
     createdAt: post.created_at,
     isMine: post.author_id === user.id,
+    canEdit: post.board === 'free' || post.board === 'qna',
     canModerate: canModerate({ role: (me?.role ?? 'pending') as UserRole, timeout_until: me?.timeout_until ?? null }),
     initialPostLiked,
     initialPostLikeCount,
@@ -87,6 +88,7 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
       content: c.content,
       createdAt: c.created_at,
       parentId: c.parent_comment_id,
+      isMine: c.author_id === user.id,
     })),
   }
 

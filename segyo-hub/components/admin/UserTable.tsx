@@ -2,6 +2,8 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { formatDate } from '@/lib/time'
+import { isInTimeout } from '@/lib/permissions'
 
 type Row = {
   id: string
@@ -10,7 +12,22 @@ type Row = {
   role: 'pending' | 'member' | 'moderator' | 'admin' | 'banned'
   grade_class: string | null
   created_at: string
+  timeout_until: string | null
 }
+
+/** 정지가 아직 유효한지. 지난 timeout_until 은 정지가 아니다. */
+function isTimedOut(until: string | null): boolean {
+  return isInTimeout({ role: 'member', timeout_until: until })
+}
+
+/** 글쓰기 정지 기간 선택지. value 는 시간, null 은 해제. */
+const TIMEOUTS: { value: number | null; label: string }[] = [
+  { value: null, label: '정지 없음' },
+  { value: 1, label: '1시간' },
+  { value: 24, label: '1일' },
+  { value: 72, label: '3일' },
+  { value: 168, label: '7일' },
+]
 
 export function UserTable({ rows, currentUserId }: { rows: Row[]; currentUserId: string }) {
   const router = useRouter()
@@ -24,6 +41,21 @@ export function UserTable({ rows, currentUserId }: { rows: Row[]; currentUserId:
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ role }),
+    })
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}))
+      setError(body.error ?? '실패')
+      return
+    }
+    startTransition(() => router.refresh())
+  }
+
+  async function applyTimeout(id: string, hours: number | null) {
+    setError(null)
+    const res = await fetch(`/api/admin/users/${id}/timeout`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ hours }),
     })
     if (!res.ok) {
       const body = await res.json().catch(() => ({}))
@@ -73,6 +105,7 @@ export function UserTable({ rows, currentUserId }: { rows: Row[]; currentUserId:
             <th className="px-3 py-2 text-left">닉네임/이메일</th>
             <th className="px-3 py-2 text-left">반</th>
             <th className="px-3 py-2 text-left">권한</th>
+            <th className="px-3 py-2 text-left">글쓰기 정지</th>
             <th className="px-3 py-2 text-left">가입</th>
           </tr>
         </thead>
@@ -98,8 +131,34 @@ export function UserTable({ rows, currentUserId }: { rows: Row[]; currentUserId:
                   <option value="banned">차단</option>
                 </select>
               </td>
-              <td className="px-3 py-2 text-xs text-muted-fg">
-                {new Date(r.created_at).toLocaleDateString('ko-KR')}
+              <td className="px-3 py-2">
+                <select
+                  // 기간을 고르면 "지금부터" 다시 센다. 그래서 현재 남은 기간을
+                  // 선택값으로 되돌려 놓지 않고 placeholder 로만 보여준다.
+                  value=""
+                  disabled={pending}
+                  onChange={(e) => {
+                    const v = e.target.value
+                    if (v === '') return
+                    applyTimeout(r.id, v === 'clear' ? null : Number(v))
+                  }}
+                  className="rounded border px-2 py-1"
+                >
+                  <option value="">{isTimedOut(r.timeout_until) ? '정지 중' : '정지 없음'}</option>
+                  {TIMEOUTS.map((t) => (
+                    <option key={t.label} value={t.value === null ? 'clear' : t.value}>
+                      {t.value === null ? '정지 해제' : t.label}
+                    </option>
+                  ))}
+                </select>
+                {isTimedOut(r.timeout_until) && (
+                  <div className="mt-0.5 text-xs text-danger" suppressHydrationWarning>
+                    {formatDate(r.timeout_until!)}까지
+                  </div>
+                )}
+              </td>
+              <td className="px-3 py-2 text-xs text-muted-fg" suppressHydrationWarning>
+                {formatDate(r.created_at)}
               </td>
             </tr>
           ))}

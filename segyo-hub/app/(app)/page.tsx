@@ -5,14 +5,18 @@ import { extractThumb, toExcerpt } from '@/lib/postPreview'
 import { ZoomableImage } from '@/components/ui/ZoomableImage'
 import { FlameIcon, ClockIcon, UtensilsIcon, CalendarIcon, MegaphoneIcon } from '@/components/ui/icons'
 
-type AuthorRel = { nickname: string | null; avatar_url: string | null } | null
+/** board_posts() 한 행. */
 type PostRow = {
   id: number
   title: string
   content: string
   is_anonymous: boolean
   created_at: string
-  author: AuthorRel
+  author_nickname: string | null
+  author_avatar_url: string | null
+  comment_count: number
+  like_count: number
+  total_count: number
 }
 
 export default async function HomePage() {
@@ -36,53 +40,35 @@ export default async function HomePage() {
   const notice = infoCards?.find((c) => c.key === 'notice') ?? null
   const hasNotice = !!(notice && (notice.body || notice.image_url))
 
-  const { data: posts } = await supabase
-    .from('posts')
-    .select(`
-      id, title, content, is_anonymous, created_at,
-      author:profiles!posts_author_id_fkey ( nickname, avatar_url )
-    `)
-    .eq('board', 'free')
-    .is('deleted_at', null)
-    .order('created_at', { ascending: false })
-    .limit(50)
-    .returns<PostRow[]>()
-
-  const list = posts ?? []
-  const ids = list.map((p) => p.id)
-  const [{ data: comments }, { data: likes }] = await Promise.all([
-    supabase.from('comments').select('post_id').in('post_id', ids).is('deleted_at', null),
-    supabase.from('reactions').select('target_id').eq('target_type', 'post').in('target_id', ids),
+  // 정렬·집계는 DB 에서. 예전엔 최근 50건만 받아 JS 로 정렬해서 오래된 인기글이
+  // 인기 코너에 절대 못 올라왔다.
+  const [{ data: recentRows }, { data: popularRows }] = await Promise.all([
+    supabase.rpc('board_posts', {
+      p_board: 'free', p_q: '', p_sort: 'latest', p_limit: 5, p_offset: 0,
+    }),
+    supabase.rpc('board_posts', {
+      p_board: 'free', p_q: '', p_sort: 'popular', p_limit: 3, p_offset: 0,
+    }),
   ])
-  const count = (
-    arr: { post_id?: number; target_id?: number }[] | null,
-    id: number,
-    key: 'post_id' | 'target_id',
-  ) => (arr ?? []).filter((r) => r[key] === id).length
 
-  const enriched = list.map((p) => ({
-    post: p,
-    commentCount: count(comments, p.id, 'post_id'),
-    likeCount: count(likes, p.id, 'target_id'),
-  }))
-  const recent = enriched.slice(0, 5)
-  const popular = [...enriched]
-    .sort((a, b) => b.likeCount + b.commentCount - (a.likeCount + a.commentCount))
-    .filter((e) => e.likeCount + e.commentCount > 0)
-    .slice(0, 3)
+  const recent = (recentRows ?? []) as PostRow[]
+  // 인기 코너는 반응이 하나라도 있는 글만 (아무도 안 본 글을 "인기"로 띄우지 않는다).
+  const popular = ((popularRows ?? []) as PostRow[]).filter(
+    (p) => p.like_count + p.comment_count > 0,
+  )
 
-  const card = (e: (typeof enriched)[number]) => (
+  const card = (p: PostRow) => (
     <PostListItem
-      id={e.post.id}
-      title={e.post.title}
-      authorNickname={e.post.author?.nickname ?? null}
-      authorAvatarUrl={e.post.author?.avatar_url ?? null}
-      isAnonymous={e.post.is_anonymous}
-      createdAt={e.post.created_at}
-      commentCount={e.commentCount}
-      likeCount={e.likeCount}
-      excerpt={toExcerpt(e.post.content)}
-      thumbnailUrl={extractThumb(e.post.content)}
+      id={p.id}
+      title={p.title}
+      authorNickname={p.author_nickname}
+      authorAvatarUrl={p.author_avatar_url}
+      isAnonymous={p.is_anonymous}
+      createdAt={p.created_at}
+      commentCount={p.comment_count}
+      likeCount={p.like_count}
+      excerpt={toExcerpt(p.content)}
+      thumbnailUrl={extractThumb(p.content)}
     />
   )
 
@@ -201,8 +187,8 @@ export default async function HomePage() {
             </Link>
           </div>
           <ul className="space-y-3">
-            {popular.map((e) => (
-              <li key={e.post.id}>{card(e)}</li>
+            {popular.map((p) => (
+              <li key={p.id}>{card(p)}</li>
             ))}
           </ul>
         </section>
@@ -220,8 +206,8 @@ export default async function HomePage() {
         </div>
         {recent.length > 0 ? (
           <ul className="space-y-3">
-            {recent.map((e) => (
-              <li key={e.post.id}>{card(e)}</li>
+            {recent.map((p) => (
+              <li key={p.id}>{card(p)}</li>
             ))}
           </ul>
         ) : (

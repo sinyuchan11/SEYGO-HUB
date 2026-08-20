@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Avatar } from '@/components/ui/Avatar'
 import { SearchIcon } from '@/components/ui/icons'
+import { MessageButton } from '@/components/dm/MessageButton'
 import { cn } from '@/lib/cn'
 
 export type Person = {
@@ -189,9 +190,15 @@ export function FriendsPanel({
             {friends.map((p) =>
               personRow(
                 p,
-                <button type="button" disabled={busy} onClick={() => remove(p.friendshipId)} className={cn(BTN, 'border border-border bg-surface text-foreground hover:bg-muted')}>
-                  끊기
-                </button>,
+                <>
+                  <button type="button" disabled={busy} onClick={() => remove(p.friendshipId)} className={cn(BTN, 'border border-border bg-surface text-foreground hover:bg-muted')}>
+                    끊기
+                  </button>
+                  <MessageButton
+                    targetId={p.id}
+                    className={cn(BTN, 'bg-primary-600 text-white hover:bg-primary-700')}
+                  />
+                </>,
               ),
             )}
           </ul>

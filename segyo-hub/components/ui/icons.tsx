@@ -66,7 +66,6 @@ export const ReplyIcon = icon(Reply, 'ReplyIcon')
 export const BellIcon = icon(Bell, 'BellIcon')
 export const AtSignIcon = icon(AtSign, 'AtSignIcon')
 export const SearchIcon = icon(Search, 'SearchIcon')
-export const PenIcon = icon(Pencil, 'PenIcon')
 export const FileTextIcon = icon(FileText, 'FileTextIcon')
 export const SunIcon = icon(Sun, 'SunIcon')
 export const MoonIcon = icon(Moon, 'MoonIcon')
@@ -84,10 +83,7 @@ export const SendIcon = icon(Send, 'SendIcon')
 /* ── Controls ────────────────────────────────────────────────────── */
 export const GridIcon = icon(LayoutGrid, 'GridIcon')
 export const ListIcon = icon(List, 'ListIcon')
-export const CheckIcon = icon(Check, 'CheckIcon')
-export const XIcon = icon(X, 'XIcon')
 export const ShieldAlertIcon = icon(ShieldAlert, 'ShieldAlertIcon')
-export const ArrowRightIcon = icon(ArrowRight, 'ArrowRightIcon')
 
 /** Heart with an optional solid fill, used for the like button's on-state. */
 export function HeartIcon({

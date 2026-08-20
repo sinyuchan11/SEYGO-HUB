@@ -12,6 +12,8 @@ export type CommentNode = {
   content: string
   createdAt: string
   parentId: number | null
+  /** 내가 쓴 댓글인지 — 수정/삭제 메뉴 노출 판단용. */
+  isMine: boolean
 }
 
 /** Render comment text with `@닉네임` turned into profile links. */
@@ -39,10 +41,15 @@ export function CommentTree({
   comments,
   members = [],
   renderActions,
+  editingId = null,
+  renderEditor,
 }: {
   comments: CommentNode[]
   members?: MentionMember[]
   renderActions?: (c: CommentNode) => ReactNode
+  /** 수정 중인 댓글 id. 그 댓글은 본문 대신 renderEditor 를 보여준다. */
+  editingId?: number | null
+  renderEditor?: (c: CommentNode) => ReactNode
 }) {
   const tops = comments.filter((c) => c.parentId === null)
   const repliesByParent = new Map<number, CommentNode[]>()
@@ -58,12 +65,23 @@ export function CommentTree({
     <ul className="divide-y divide-border bg-surface">
       {tops.map((c) => (
         <li key={c.id} className="px-4 py-4">
-          <CommentBlock c={c} members={members} actions={renderActions?.(c)} />
+          <CommentBlock
+            c={c}
+            members={members}
+            actions={renderActions?.(c)}
+            editor={c.id === editingId ? renderEditor?.(c) : undefined}
+          />
           {(repliesByParent.get(c.id) ?? []).length > 0 && (
             <ul className="mt-3 space-y-3 border-l-2 border-border pl-4">
               {(repliesByParent.get(c.id) ?? []).map((r) => (
                 <li key={r.id}>
-                  <CommentBlock c={r} members={members} actions={renderActions?.(r)} reply />
+                  <CommentBlock
+                    c={r}
+                    members={members}
+                    actions={renderActions?.(r)}
+                    editor={r.id === editingId ? renderEditor?.(r) : undefined}
+                    reply
+                  />
                 </li>
               ))}
             </ul>
@@ -83,11 +101,13 @@ function CommentBlock({
   c,
   members,
   actions,
+  editor,
   reply,
 }: {
   c: CommentNode
   members: MentionMember[]
   actions?: ReactNode
+  editor?: ReactNode
   reply?: boolean
 }) {
   const isAnon = c.isAnonymous
@@ -107,10 +127,16 @@ function CommentBlock({
             {timeAgo(c.createdAt)}
           </span>
         </div>
-        <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">
-          <CommentText text={c.content} members={members} />
-        </p>
-        {actions && <div className="mt-2">{actions}</div>}
+        {editor ? (
+          <div className="mt-1">{editor}</div>
+        ) : (
+          <>
+            <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">
+              <CommentText text={c.content} members={members} />
+            </p>
+            {actions && <div className="mt-2">{actions}</div>}
+          </>
+        )}
       </div>
     </div>
   )

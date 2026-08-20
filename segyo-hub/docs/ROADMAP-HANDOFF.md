@@ -26,24 +26,36 @@
 - 앱 기반: 로그인(스플릿 카드) / 리치에디터 글쓰기(TipTap) / 게시판 카드피드+검색+정렬+FAB / 홈(`/` 실제 페이지: 배너·검색·바로가기·인기/최근·식단일정·공지) / 내정보+프로필편집(아바타·커버 업로드) / 댓글 UI(아바타·스레드) / 알림(배지·`/notifications`) / 식단표·일정표·공지(관리자 `/admin/info`, 이미지+라이트박스)
 - 로드맵: **#1** 아이콘 세트(lucide) · **#3** 프로필 메뉴+로그아웃 · **#4** 다크모드 · **#5** 게시글 신고(`/admin/reports`) · **#6** 욕설 필터(마스킹+`/admin/words`+우회 의심 관리자 알림) · **#7** 게시판 구분(전체/자유/질문 탭) · **#8** 친구추가(`/friends`, `/u/[id]`) · **#9** 1:1 DM(`/messages`, 실시간+읽음 표시) · **#10** 멘션(글·댓글 `@닉네임` + 자동완성 + 알림)
 - 공지는 게시판 글이 아니라 홈의 관리자 공지 카드(`info_cards`)로 옮겨졌다. 그래서 board 탭은 `all/free/qna` 셋뿐 (`lib/board.ts`).
+- 그 뒤 추가: 글 수정(`/post/[id]/edit`, 작성자 본인만) · 댓글 수정/삭제 · 게시판 페이지네이션(20개) ·
+  카드/목록 뷰 전환 · 글쓰기 정지 UI(`/admin/users`, 1시간~7일) · 알림 실시간 ·
+  친구 목록의 메시지 버튼 · 프로필 게시글 수 → `/u/[id]/posts` · DM 비속어 마스킹.
 
 ## 남은 로드맵
 2. **글 상세 페이지 디자인 개선** — 사용자가 캡처를 줄 예정. 먼저 캡처를 요청할 것.
 
-## 중단된 작업 (이어서 하려면)
-- **게시판 카드/리스트 뷰 토글**: `icons.tsx`에 `GridIcon`/`ListIcon`만 추가돼 있고 어디서도 안 쓰인다. `/board`에 뷰 전환 UI가 미구현 상태로 남음.
+## 알아둘 것 (실측으로 확인된 것들)
+- **계정이 admin 둘뿐이다.** `member`/`pending` 경로는 admin 계정으로는 절대 재현되지 않는다
+  (모더/관리자용 정책이 따로 통과시켜 준다). 권한과 얽힌 걸 고쳤으면 임시 member 계정을
+  만들어 실제로 눌러보고, 끝나면 지울 것.
+- **RLS UPDATE 정책에 `with check` 를 빼먹지 말 것.** 빼면 Postgres 가 `using` 식을
+  새 행에도 적용한다. `using (... and deleted_at is null)` 만 있던 탓에 작성자가 자기 글을
+  소프트 삭제하지 못했다(0024 에서 수정).
+- **쓰기 결과를 확인할 것.** `await supabase.from(...).update(...)` 만 하고 넘어가면
+  RLS 가 막아도 성공한 것처럼 보인다. `.select().maybeSingle()` 로 0행을 잡아 안내한다.
+- **목록은 DB 에서 세고 정렬한다** (`board_posts()`). JS 로 정렬하면 가져온 페이지 안에서만
+  정렬돼 "인기순"이 인기순이 아니게 된다.
 
 ## 라우트
-- 앱: `/`, `/board`, `/post/new`, `/post/[id]`, `/me`, `/me/edit`, `/u/[id]`, `/friends`, `/messages`, `/messages/[id]`, `/notifications`
+- 앱: `/`, `/board`, `/post/new`, `/post/[id]`, `/post/[id]/edit`, `/me`, `/me/edit`, `/u/[id]`, `/u/[id]/posts`, `/friends`, `/messages`, `/messages/[id]`, `/notifications`
 - 관리자: `/admin/info`, `/admin/reports`, `/admin/users`, `/admin/words`
 - 인증: `/login`, `/signup`, `/onboarding`, `/pending`
-- API: `/api/upload`, `/api/admin/info-image`, `/api/admin/users/[id]/role`, `/api/notifications/read`
+- API: `/api/upload`, `/api/admin/info-image`, `/api/admin/users/[id]/role`, `/api/admin/users/[id]/timeout`, `/api/notifications/read`
 
 ## 마이그레이션 현황 (라이브 적용됨)
-`0001`~`0023`. 최근: `0019` dm 읽음 표시, `0020` 공지 info_card,
-`0021` 멘션(`mention` 알림 종류 + 닉네임 매칭 함수 + 글/댓글 트리거),
-`0022` 멘션 알림을 항상 발송(댓글 알림과 중복 생략하던 규칙 제거),
-`0023` `unread_dm_count()` — 네비게이션 DM 배지용.
+`0001`~`0025`. 최근: `0021` 멘션, `0022` 멘션 알림 항상 발송,
+`0023` `unread_dm_count()` — 네비게이션 DM 배지용,
+`0024` 작성자 글/댓글 삭제 정책 수정 + 삭제된 글 댓글 차단 + `board_posts()` + 알림 실시간 발행,
+`0025` DM 비속어 마스킹(`messages_mask_profanity`. DM 은 사생활이라 우회 의심 관리자 알림은 보내지 않는다).
 
 ## 테스트
 `npm test` (vitest). `lib/` 순수 로직(board·dm·friends·permissions·profanity·profile)과 일부 UI 컴포넌트에 테스트가 있다. 로직 추가 시 같이 붙일 것.

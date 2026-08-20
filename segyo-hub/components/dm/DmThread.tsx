@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Avatar } from '@/components/ui/Avatar'
 import { formatClock } from '@/lib/time'
 import { cn } from '@/lib/cn'
+import { checkContainsProfanity } from '@/lib/profanity'
 import { refreshUnreadDmCount } from '@/lib/useUnreadDm'
 
 export type DmMessage = { id: number; sender_id: string; body: string; created_at: string }
@@ -28,6 +29,8 @@ export function DmThread({
   const [otherRead, setOtherRead] = useState<string | null>(otherLastReadAt)
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
+  const [warning, setWarning] = useState<string | null>(null)
+  const [warned, setWarned] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
 
   async function markRead() {
@@ -86,6 +89,19 @@ export function DmThread({
     const body = text.trim()
     if (!body) return
     setSending(true)
+
+    // 글/댓글과 같은 규칙: 처음 걸리면 보내지 않고 경고만 하고, 한 번 더 누르면
+    // 그대로 보낸다. 저장 시 DB 트리거가 마스킹한다.
+    if (!warned) {
+      const dirty = await checkContainsProfanity(supabase, body)
+      if (dirty) {
+        setWarning('비속어가 포함되어 있어요. 그대로 보내면 해당 부분이 가려진 채 전송됩니다. 한 번 더 누르면 전송돼요.')
+        setWarned(true)
+        setSending(false)
+        return
+      }
+    }
+
     const { data } = await supabase
       .from('messages')
       .insert({ conversation_id: conversationId, sender_id: myId, body })
@@ -93,6 +109,8 @@ export function DmThread({
       .single()
     setSending(false)
     setText('')
+    setWarned(false)
+    setWarning(null)
     if (data) {
       const m = data as DmMessage
       setMsgs((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]))
@@ -155,22 +173,36 @@ export function DmThread({
       </div>
 
       {/* Composer */}
-      <form onSubmit={send} className="flex items-center gap-2 border-t border-border pt-2">
-        <input
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="메시지 입력"
-          maxLength={2000}
-          className="min-w-0 flex-1 rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary-400"
-        />
-        <button
-          type="submit"
-          disabled={sending || !text.trim()}
-          className="shrink-0 rounded-xl bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-40"
-        >
-          전송
-        </button>
-      </form>
+      <div className="border-t border-border pt-2">
+        {warning && (
+          <p className="mb-2 rounded-lg border border-border bg-muted px-3 py-2 text-xs text-foreground">
+            {warning}
+          </p>
+        )}
+        <form onSubmit={send} className="flex items-center gap-2">
+          <input
+            value={text}
+            onChange={(e) => {
+              setText(e.target.value)
+              // 문구를 고쳤으면 경고를 지워 다시 검사받게 한다.
+              if (warned || warning) {
+                setWarned(false)
+                setWarning(null)
+              }
+            }}
+            placeholder="메시지 입력"
+            maxLength={2000}
+            className="min-w-0 flex-1 rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary-400"
+          />
+          <button
+            type="submit"
+            disabled={sending || !text.trim()}
+            className="shrink-0 rounded-xl bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-40"
+          >
+            {warned ? '그대로 전송' : '전송'}
+          </button>
+        </form>
+      </div>
     </div>
   )
 }

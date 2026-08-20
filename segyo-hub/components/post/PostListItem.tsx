@@ -16,6 +16,30 @@ export type PostListItemProps = {
   thumbnailUrl?: string | null
 }
 
+/** 목록(리스트) 뷰용 한 줄 항목. 카드 뷰의 PostListItem 과 같은 데이터를 받는다. */
+export function PostListRow(props: PostListItemProps) {
+  const author = props.isAnonymous ? '익명' : props.authorNickname ?? '(알 수 없음)'
+
+  return (
+    <Link
+      href={`/post/${props.id}`}
+      className="group flex items-center gap-3 border-b border-border px-1 py-2.5 transition-colors last:border-0 hover:bg-muted"
+    >
+      <h3 className="min-w-0 flex-1 truncate text-sm font-medium text-foreground transition-colors group-hover:text-primary-700">
+        {props.title}
+      </h3>
+      <span className="shrink-0 text-xs text-muted-fg">{author}</span>
+      <span className="shrink-0 text-xs text-muted-fg">{timeAgo(props.createdAt)}</span>
+      <span className="inline-flex shrink-0 items-center gap-1 text-xs text-muted-fg">
+        <MessageIcon size={13} /> {props.commentCount}
+      </span>
+      <span className="inline-flex shrink-0 items-center gap-1 text-xs text-muted-fg">
+        <HeartIcon size={13} /> {props.likeCount}
+      </span>
+    </Link>
+  )
+}
+
 export function PostListItem(props: PostListItemProps) {
   const author = props.isAnonymous ? '익명' : props.authorNickname ?? '(알 수 없음)'
   const avatarSrc = props.isAnonymous ? null : props.authorAvatarUrl ?? null

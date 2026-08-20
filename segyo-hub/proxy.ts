@@ -64,24 +64,31 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/', request.url))
   }
 
-  // role과 nickname 조회
+  // role과 nickname 조회.
+  // supabase-js 는 PostgREST 에러를 throw 하지 않고 { data: null, error } 로 준다.
+  // 그래서 예전 try/catch 는 거의 죽은 코드였고, 조회가 실패하면 profile 이 null 인 채
+  // 그냥 통과(fall open)해서 pending/banned 사용자가 보호된 페이지를 볼 수 있었다.
+  // 실제 쓰기는 RLS 가 막지만, 여기서도 닫는 쪽으로 처리한다.
   let profile: { role: UserRole; nickname: string | null } | null = null
   try {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
       .select('role, nickname')
       .eq('id', user.id)
       .single()
+    if (error) throw error
     profile = data
   } catch (err) {
-    // TODO(phase-2): consider redirecting to /pending here. Falling open is
-    // acceptable for Phase 1 but lets a transient lookup failure expose protected
-    // pages to a pending/banned user until the next request.
     console.error('[proxy] profile lookup failed:', err)
-    return response
+    // 이미 /pending 이면 리다이렉트 루프가 되므로 그대로 둔다.
+    if (PENDING_ALLOWED.includes(pathname)) return response
+    return NextResponse.redirect(new URL('/pending', request.url))
   }
 
-  if (!profile) return response
+  if (!profile) {
+    if (PENDING_ALLOWED.includes(pathname)) return response
+    return NextResponse.redirect(new URL('/pending', request.url))
+  }
 
   // pending → /pending 외엔 차단
   if (profile.role === 'pending') {

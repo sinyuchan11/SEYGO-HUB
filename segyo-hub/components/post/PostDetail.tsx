@@ -34,6 +34,8 @@ export type PostDetailData = {
   isAnonymous: boolean
   createdAt: string
   isMine: boolean
+  /** 자유/질문 글만 글쓰기 폼으로 고칠 수 있다 (공지 게시판 레거시 글 제외). */
+  canEdit: boolean
   canModerate: boolean
   initialPostLiked: boolean
   initialPostLikeCount: number
@@ -51,7 +53,15 @@ export function PostDetail({ data }: { data: PostDetailData }) {
   const [commentWarning, setCommentWarning] = useState<string | null>(null)
   const [commentWarned, setCommentWarned] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const [reportOpen, setReportOpen] = useState(false)
+
+  // 댓글 수정/삭제
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [editText, setEditText] = useState('')
+  const [editSaving, setEditSaving] = useState(false)
+  const [confirmDeleteComment, setConfirmDeleteComment] = useState<number | null>(null)
+  const [commentActionError, setCommentActionError] = useState<string | null>(null)
 
   // 멘션 자동완성: caret 위치가 있어야 `@질의`를 잡을 수 있어 함께 추적한다.
   const inputRef = useRef<HTMLInputElement>(null)
@@ -161,8 +171,59 @@ export function PostDetail({ data }: { data: PostDetailData }) {
 
   async function deletePost() {
     const supabase = createClient()
-    await supabase.from('posts').update({ deleted_at: new Date().toISOString() }).eq('id', data.id)
+    setDeleteError(null)
+    // 결과를 확인하지 않으면 RLS 가 막았을 때도 삭제된 것처럼 보인다.
+    // 0행이면 정책에 걸린 것 → maybeSingle 로 받아 직접 안내한다.
+    const { data: row, error } = await supabase
+      .from('posts')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', data.id)
+      .select('id')
+      .maybeSingle()
+
+    if (error || !row) {
+      setDeleteError(error?.message ?? '삭제하지 못했어요. 권한을 확인해주세요.')
+      return
+    }
+
     router.push('/board')
+    router.refresh()
+  }
+
+  async function saveComment(id: number) {
+    const next = editText.trim()
+    if (next.length === 0) return
+    setEditSaving(true)
+    setCommentActionError(null)
+    const supabase = createClient()
+    const { data: row, error } = await supabase
+      .from('comments')
+      .update({ content: next })
+      .eq('id', id)
+      .select('id')
+      .maybeSingle()
+    setEditSaving(false)
+    if (error || !row) {
+      setCommentActionError(error?.message ?? '수정하지 못했어요. 권한을 확인해주세요.')
+      return
+    }
+    setEditingId(null)
+    router.refresh()
+  }
+
+  async function deleteComment(id: number) {
+    setCommentActionError(null)
+    const supabase = createClient()
+    const { data: row, error } = await supabase
+      .from('comments')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', id)
+      .select('id')
+      .maybeSingle()
+    if (error || !row) {
+      setCommentActionError(error?.message ?? '삭제하지 못했어요. 권한을 확인해주세요.')
+      return
+    }
     router.refresh()
   }
 
@@ -209,6 +270,11 @@ export function PostDetail({ data }: { data: PostDetailData }) {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
+              {data.isMine && data.canEdit && (
+                <DropdownMenuItem onSelect={() => router.push(`/post/${data.id}/edit`)}>
+                  수정
+                </DropdownMenuItem>
+              )}
               {!data.isMine && (
                 <DropdownMenuItem onSelect={() => setReportOpen(true)}>신고</DropdownMenuItem>
               )}
@@ -246,6 +312,13 @@ export function PostDetail({ data }: { data: PostDetailData }) {
           />
         </div>
       </article>
+
+      {/* Delete failure — 다이얼로그를 닫은 뒤에도 보여야 하므로 본문에 둔다. */}
+      {deleteError && (
+        <p className="border-b border-border bg-danger/10 px-4 py-2 text-sm text-danger">
+          {deleteError}
+        </p>
+      )}
 
       {/* Delete confirmation */}
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
@@ -286,9 +359,44 @@ export function PostDetail({ data }: { data: PostDetailData }) {
         targetId={data.id}
       />
 
+      {commentActionError && (
+        <p className="border-b border-border bg-danger/10 px-4 py-2 text-sm text-danger">
+          {commentActionError}
+        </p>
+      )}
+
       <CommentTree
         comments={data.comments}
         members={data.members}
+        editingId={editingId}
+        renderEditor={(c) => (
+          <div className="space-y-2">
+            <textarea
+              value={editText}
+              onChange={(e) => setEditText(e.target.value)}
+              rows={3}
+              maxLength={1000}
+              className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary-400"
+            />
+            <div className="flex gap-2 text-xs">
+              <button
+                type="button"
+                disabled={editSaving || editText.trim().length === 0}
+                onClick={() => saveComment(c.id)}
+                className="rounded-lg bg-primary-600 px-3 py-1.5 font-medium text-white hover:bg-primary-700 disabled:opacity-40"
+              >
+                {editSaving ? '저장 중...' : '저장'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditingId(null)}
+                className="rounded-lg bg-muted px-3 py-1.5 font-medium text-foreground hover:bg-border"
+              >
+                취소
+              </button>
+            </div>
+          </div>
+        )}
         renderActions={(c) => {
           const lk = data.commentLikeMap[c.id] ?? { liked: false, count: 0 }
           return (
@@ -305,10 +413,65 @@ export function PostDetail({ data }: { data: PostDetailData }) {
                   답글
                 </button>
               )}
+              {c.isMine && (
+                <button
+                  onClick={() => {
+                    setCommentActionError(null)
+                    setEditText(c.content)
+                    setEditingId(c.id)
+                  }}
+                  className="font-medium text-muted-fg hover:text-foreground"
+                >
+                  수정
+                </button>
+              )}
+              {(c.isMine || data.canModerate) && (
+                <button
+                  onClick={() => setConfirmDeleteComment(c.id)}
+                  className="font-medium text-muted-fg hover:text-danger"
+                >
+                  삭제
+                </button>
+              )}
             </div>
           )
         }}
       />
+
+      {/* Comment delete confirmation */}
+      <Dialog
+        open={confirmDeleteComment !== null}
+        onOpenChange={(v) => !v && setConfirmDeleteComment(null)}
+      >
+        <DialogContent>
+          <DialogTitle className="text-base font-bold text-foreground">
+            이 댓글을 삭제할까요?
+          </DialogTitle>
+          <DialogDescription className="mt-1 text-sm text-muted-fg">
+            삭제하면 되돌릴 수 없어요.
+          </DialogDescription>
+          <div className="mt-5 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setConfirmDeleteComment(null)}
+              className="rounded-lg bg-muted px-4 py-2 text-sm font-medium text-foreground hover:bg-border"
+            >
+              취소
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const id = confirmDeleteComment
+                setConfirmDeleteComment(null)
+                if (id !== null) deleteComment(id)
+              }}
+              className="rounded-lg bg-danger px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+            >
+              삭제
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="sticky bottom-16 border-t border-border bg-surface px-4 py-3 shadow-[0_-1px_0_0_var(--color-border)]">
         {replyTo !== null && (
