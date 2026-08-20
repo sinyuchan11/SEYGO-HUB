@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { ClockIcon, ShieldBanIcon } from '@/components/ui/icons'
 
 export default async function PendingPage() {
   const supabase = await createClient()
@@ -22,28 +23,49 @@ export default async function PendingPage() {
   }
 
   return (
-    <main className="mx-auto max-w-sm px-4 py-16 text-center">
-      {banned ? (
-        <>
-          <h1 className="mb-4 text-2xl font-bold">접근이 차단되었습니다</h1>
-          <p className="text-muted-fg">
-            운영자가 계정을 차단했습니다. 문의는 운영자에게 직접 연락해 주세요.
+    <div className="flex min-h-screen items-center justify-center bg-canvas p-4">
+      {/* 폼이 없는 화면이라 로그인의 스플릿 카드 대신 가운데 카드 하나로 잡는다. */}
+      <div className="w-full max-w-md overflow-hidden rounded-3xl bg-surface p-8 text-center shadow-2xl md:p-10">
+        <div
+          className={`mx-auto grid h-16 w-16 place-items-center rounded-2xl ${
+            banned ? 'bg-danger/10 text-danger' : 'bg-primary-50 text-primary-600'
+          }`}
+        >
+          {banned ? <ShieldBanIcon size={30} /> : <ClockIcon size={30} />}
+        </div>
+
+        <h1 className="mt-5 text-2xl font-bold text-foreground">
+          {banned ? '접근이 차단되었습니다' : '승인 대기 중'}
+        </h1>
+
+        <p className="mt-2 text-sm leading-relaxed text-muted-fg">
+          {banned ? (
+            '운영자가 계정을 차단했습니다. 문의는 운영자에게 직접 연락해 주세요.'
+          ) : (
+            <>
+              가입은 끝났어요. 이제 운영자 승인만 기다리면 됩니다.
+              <br />
+              승인되면 바로 글을 쓸 수 있어요.
+            </>
+          )}
+        </p>
+
+        {!banned && (
+          <p className="mt-5 rounded-xl border border-border bg-muted px-4 py-3 text-xs leading-relaxed text-muted-fg">
+            승인은 운영자가 직접 확인해서 처리해요. 조금 걸릴 수 있으니 잠시 후 다시
+            들어와 주세요.
           </p>
-        </>
-      ) : (
-        <>
-          <h1 className="mb-4 text-2xl font-bold">승인 대기 중</h1>
-          <p className="text-muted-fg">
-            가입은 완료되었지만 아직 운영자의 승인이 필요해요. 승인되면
-            바로 글을 쓸 수 있습니다.
-          </p>
-        </>
-      )}
-      <form action={logout} className="mt-8">
-        <button type="submit" className="text-sm text-primary-600 underline">
-          로그아웃
-        </button>
-      </form>
-    </main>
+        )}
+
+        <form action={logout} className="mt-6">
+          <button
+            type="submit"
+            className="text-sm font-medium text-muted-fg transition-colors hover:text-foreground"
+          >
+            로그아웃
+          </button>
+        </form>
+      </div>
+    </div>
   )
 }

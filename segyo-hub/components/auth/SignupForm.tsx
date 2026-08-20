@@ -3,6 +3,10 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { Input } from '@/components/ui/Input'
+import { Button } from '@/components/ui/Button'
+import { PasswordField } from '@/components/auth/PasswordField'
+import { cn } from '@/lib/cn'
 
 export function SignupForm() {
   const router = useRouter()
@@ -40,43 +44,57 @@ export function SignupForm() {
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
-      <input
-        type="email"
-        required
-        placeholder="이메일"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        className="w-full rounded border px-3 py-2"
-      />
-      <input
-        type="password"
-        required
-        minLength={6}
-        placeholder="비밀번호 (6자 이상)"
+      <div className="space-y-1.5">
+        <label htmlFor="signup-email" className="block text-sm font-medium text-foreground">
+          이메일
+        </label>
+        <Input
+          id="signup-email"
+          type="email"
+          required
+          placeholder="you@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+      </div>
+
+      <PasswordField
+        id="signup-password"
+        label="비밀번호"
         value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        className="w-full rounded border px-3 py-2"
+        onChange={setPassword}
+        minLength={6}
+        hint="6자 이상으로 정해주세요."
       />
-      <label className="flex items-start gap-2 text-sm">
+
+      {/* 약관 동의 — 클릭 영역을 카드 전체로 넓혀 모바일에서 누르기 쉽게 한다. */}
+      <label
+        className={cn(
+          'flex cursor-pointer select-none items-start gap-3 rounded-xl border p-3 transition-colors',
+          agreed
+            ? 'border-primary-300 bg-primary-50'
+            : 'border-border bg-surface hover:bg-muted',
+        )}
+      >
         <input
           type="checkbox"
           checked={agreed}
           onChange={(e) => setAgreed(e.target.checked)}
-          className="mt-1"
+          className="mt-0.5 h-4 w-4 shrink-0 accent-primary-600"
         />
-        <span>
-          만 14세 이상이며, 운영자(관리자)가 모든 글과 익명 글의 작성자를
-          볼 수 있다는 점에 동의합니다.
+        <span className="text-xs leading-relaxed text-muted-fg">
+          만 14세 이상이며, 운영자(관리자)가 모든 글과 익명 글의 작성자를 볼 수 있다는 점에
+          동의합니다.
         </span>
       </label>
-      {error && <p className="text-sm text-danger">{error}</p>}
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full rounded bg-primary-600 py-2 text-white disabled:opacity-50"
-      >
+
+      {error && (
+        <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p>
+      )}
+
+      <Button type="submit" variant="primary" size="lg" disabled={loading} className="w-full">
         {loading ? '가입 중...' : '가입하기'}
-      </button>
+      </Button>
     </form>
   )
 }

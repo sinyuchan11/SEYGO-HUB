@@ -4,6 +4,8 @@ import {
   Calendar,
   Check,
   Clock,
+  Eye,
+  EyeOff,
   FileText,
   Flame,
   Heart,
@@ -18,7 +20,9 @@ import {
   Reply,
   Search,
   Send,
+  Sparkles,
   ShieldAlert,
+  ShieldBan,
   SquarePen,
   Sun,
   Trash2,
@@ -81,6 +85,12 @@ export const SendIcon = icon(Send, 'SendIcon')
 export const GridIcon = icon(LayoutGrid, 'GridIcon')
 export const ListIcon = icon(List, 'ListIcon')
 export const ShieldAlertIcon = icon(ShieldAlert, 'ShieldAlertIcon')
+
+/* ── Auth ────────────────────────────────────────────────────────── */
+export const EyeIcon = icon(Eye, 'EyeIcon')
+export const EyeOffIcon = icon(EyeOff, 'EyeOffIcon')
+export const ShieldBanIcon = icon(ShieldBan, 'ShieldBanIcon')
+export const SparklesIcon = icon(Sparkles, 'SparklesIcon')
 
 /** Heart with an optional solid fill, used for the like button's on-state. */
 export function HeartIcon({

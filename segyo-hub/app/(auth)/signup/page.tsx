@@ -1,15 +1,29 @@
 import Link from 'next/link'
 import { SignupForm } from '@/components/auth/SignupForm'
+import { AuthShell } from '@/components/auth/AuthShell'
 
 export default function SignupPage() {
   return (
-    <main className="mx-auto max-w-sm px-4 py-12">
-      <h1 className="mb-6 text-2xl font-bold">Segyo Hub 가입</h1>
+    <AuthShell
+      title="가입하기"
+      subtitle="세교중 친구들과 함께해요"
+      headline={
+        <>
+          Segyo Hub
+          <br />
+          함께 시작해요
+        </>
+      }
+      footer={
+        <>
+          이미 계정 있어요?{' '}
+          <Link href="/login" className="font-medium text-primary-600 hover:underline">
+            로그인
+          </Link>
+        </>
+      }
+    >
       <SignupForm />
-      <p className="mt-4 text-center text-sm">
-        이미 계정 있어요?{' '}
-        <Link href="/login" className="text-primary-600">로그인</Link>
-      </p>
-    </main>
+    </AuthShell>
   )
 }
