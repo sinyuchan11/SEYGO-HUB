@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { PasswordField } from '@/components/auth/PasswordField'
@@ -18,10 +17,22 @@ export function LoginForm() {
     e.preventDefault()
     setError(null)
     setLoading(true)
-    const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) {
-      setError('이메일 또는 비밀번호가 맞지 않아요.')
+    // 실패 횟수 제한(15분에 5번)은 서버 라우트에서 센다. 성공하면 세션 쿠키가 응답에 실려 온다.
+    let res: Response
+    try {
+      res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+    } catch {
+      setError('네트워크 연결을 확인해 주세요.')
+      setLoading(false)
+      return
+    }
+    if (!res.ok) {
+      const body = (await res.json().catch(() => null)) as { error?: string } | null
+      setError(body?.error ?? '이메일 또는 비밀번호가 맞지 않아요.')
       setLoading(false)
       return
     }
