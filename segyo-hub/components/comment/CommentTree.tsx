@@ -14,6 +14,8 @@ export type CommentNode = {
   parentId: number | null
   /** 내가 쓴 댓글인지 — 수정/삭제 메뉴 노출 판단용. */
   isMine: boolean
+  /** 익명 글에서 글쓴이가 단 익명 댓글인지 — "글쓴이" 표시용. */
+  isPostAuthor?: boolean
 }
 
 /** Render comment text with `@닉네임` turned into profile links. */
@@ -120,6 +122,9 @@ function CommentBlock({
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">
           <span className="text-sm font-medium text-foreground">{author}</span>
+          {c.isPostAuthor && (
+            <span className="rounded bg-muted px-1.5 py-0.5 text-[11px] font-medium text-primary-600">글쓴이</span>
+          )}
           <span
             className="text-xs text-muted-fg"
             suppressHydrationWarning

@@ -42,15 +42,10 @@ export default async function UserPostsPage({
 
   // 익명 글은 제외한다. 프로필의 '게시글' 수(get_profile_with_stats)도 익명을 빼고 세므로
   // 숫자와 목록이 어긋나지 않고, 익명으로 쓴 글의 작성자가 드러나지도 않는다.
-  const { data: posts, count } = await supabase
-    .from('posts')
-    .select('id, title, content, is_anonymous, created_at', { count: 'exact' })
-    .eq('author_id', id)
-    .eq('is_anonymous', false)
-    .is('deleted_at', null)
-    .order('created_at', { ascending: false })
-    .range(from, from + PAGE_SIZE - 1)
-    .returns<Row[]>()
+  // author_id 로 거르는 건 클라이언트 역할로 못 하므로(0027) user_posts() 를 쓴다.
+  const { data: rows } = await supabase.rpc('user_posts', { p_user: id, p_limit: PAGE_SIZE, p_offset: from })
+  const posts = (rows ?? []) as (Row & { total_count: number })[]
+  const count = posts?.[0]?.total_count ?? 0
 
   const list = posts ?? []
   const total = count ?? 0

@@ -14,16 +14,20 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
   } = await supabase.auth.getUser()
   if (!user) notFound()
 
-  const { data: post } = await supabase
-    .from('posts')
-    .select('id, title, content, board, is_anonymous, author_id, deleted_at')
-    .eq('id', postId)
-    .single()
-  if (!post || post.deleted_at) notFound()
+  // author_id 는 클라이언트 역할로 읽을 수 없다(0027). 본인 여부는 post_view 의 is_mine 으로 본다.
+  const { data: post } = await supabase.rpc('post_view', { p_post_id: postId }).maybeSingle<{
+    id: number
+    title: string
+    content: string
+    board: string
+    is_anonymous: boolean
+    is_mine: boolean
+  }>()
+  if (!post) notFound()
 
   // 수정은 작성자 본인만. 모더/관리자는 삭제·신고 처리로 대응한다
   // (남의 글 내용을 대신 고쳐 쓰는 건 별개 문제라 여기선 열지 않는다).
-  if (post.author_id !== user.id) redirect(`/post/${postId}`)
+  if (!post.is_mine) redirect(`/post/${postId}`)
 
   // 글쓰기 폼은 자유/질문만 다룬다. 공지 게시판 글(레거시)은 여기서 고칠 수 없다.
   if (post.board !== 'free' && post.board !== 'qna') redirect(`/post/${postId}`)

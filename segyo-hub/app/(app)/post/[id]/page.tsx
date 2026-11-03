@@ -19,27 +19,36 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
     .eq('id', user.id)
     .single()
 
-  const { data: post } = await supabase
-    .from('posts')
-    .select(`
-      id, title, content, author_id, board, is_anonymous, created_at, deleted_at,
-      author:profiles!posts_author_id_fkey ( nickname )
-    `)
-    .eq('id', postId)
-    .single()
-  if (!post || post.deleted_at) notFound()
+  // 작성자 정보는 post_view/post_comments 로만 받는다(0027). 익명이면 작성자가 비어서 오고,
+  // 본인 여부만 is_mine 으로 알려준다. 여기서 받은 값은 그대로 클라이언트로 직렬화되므로
+  // 익명 작성자의 id·닉네임을 절대 담지 말 것.
+  const { data: post } = await supabase.rpc('post_view', { p_post_id: postId }).maybeSingle<{
+    id: number
+    title: string
+    content: string
+    board: string
+    is_anonymous: boolean
+    created_at: string
+    author_id: string | null
+    author_nickname: string | null
+    is_mine: boolean
+  }>()
+  if (!post) notFound()
 
-  const { data: comments } = await supabase
-    .from('comments')
-    .select(`
-      id, post_id, author_id, parent_comment_id, content, is_anonymous, created_at, deleted_at,
-      author:profiles!comments_author_id_fkey ( nickname, avatar_url )
-    `)
-    .eq('post_id', postId)
-    .is('deleted_at', null)
-    .order('created_at', { ascending: true })
+  const { data: commentRows } = await supabase.rpc('post_comments', { p_post_id: postId })
+  const comments = (commentRows ?? []) as {
+    id: number
+    parent_comment_id: number | null
+    content: string
+    is_anonymous: boolean
+    created_at: string
+    author_nickname: string | null
+    author_avatar_url: string | null
+    is_mine: boolean
+    is_post_author: boolean
+  }[]
 
-  const commentIds = (comments ?? []).map((c: any) => c.id)
+  const commentIds = (comments ?? []).map((c) => c.id)
   const { data: postLikes } = await supabase
     .from('reactions')
     .select('user_id')
@@ -70,25 +79,26 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
     title: post.title,
     content: post.content,
     authorId: post.author_id,
-    authorNickname: (post as any).author?.nickname ?? null,
+    authorNickname: post.author_nickname,
     isAnonymous: post.is_anonymous,
     createdAt: post.created_at,
-    isMine: post.author_id === user.id,
+    isMine: post.is_mine,
     canEdit: post.board === 'free' || post.board === 'qna',
     canModerate: canModerate({ role: (me?.role ?? 'pending') as UserRole, timeout_until: me?.timeout_until ?? null }),
     initialPostLiked,
     initialPostLikeCount,
     commentLikeMap,
     members,
-    comments: (comments ?? []).map((c: any) => ({
+    comments: (comments ?? []).map((c) => ({
       id: c.id,
-      authorNickname: c.author?.nickname ?? null,
-      authorAvatarUrl: c.author?.avatar_url ?? null,
+      authorNickname: c.author_nickname,
+      authorAvatarUrl: c.author_avatar_url,
       isAnonymous: c.is_anonymous,
       content: c.content,
       createdAt: c.created_at,
       parentId: c.parent_comment_id,
-      isMine: c.author_id === user.id,
+      isMine: c.is_mine,
+      isPostAuthor: c.is_post_author,
     })),
   }
 

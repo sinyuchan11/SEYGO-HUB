@@ -29,7 +29,7 @@ export type PostDetailData = {
   id: number
   title: string
   content: string
-  authorId: string
+  authorId: string | null  // 익명 글이면 null — 서버가 비워서 준다
   authorNickname: string | null
   isAnonymous: boolean
   createdAt: string
