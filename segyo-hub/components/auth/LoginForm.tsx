@@ -17,7 +17,7 @@ export function LoginForm() {
     e.preventDefault()
     setError(null)
     setLoading(true)
-    // 실패 횟수 제한(15분에 5번)은 서버 라우트에서 센다. 성공하면 세션 쿠키가 응답에 실려 온다.
+    // 실패 횟수 제한(3분에 5번)은 서버 라우트에서 센다. 성공하면 세션 쿠키가 응답에 실려 온다.
     let res: Response
     try {
       res = await fetch('/api/auth/login', {

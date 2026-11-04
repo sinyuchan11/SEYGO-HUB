@@ -13,10 +13,10 @@ describe('loginLimitState', () => {
     expect(loginLimitState([ago(1), ago(2), ago(3), ago(4)], NOW)).toEqual({ locked: false, remaining: 1 })
   })
 
-  it('15분 안에 5번 틀리면 잠긴다', () => {
+  it('3분 안에 5번 틀리면 잠긴다', () => {
     const s = loginLimitState([ago(1000), ago(2000), ago(3000), ago(4000), ago(5000)], NOW)
     expect(s.locked).toBe(true)
-    // 5번째(가장 오래된) 실패가 5초 전 → 15분 - 5초 남음
+    // 5번째(가장 오래된) 실패가 5초 전 → 3분 - 5초 남음
     if (s.locked) expect(s.retryAfterSec).toBe(WINDOW_MS / 1000 - 5)
   })
 

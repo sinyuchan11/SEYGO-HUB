@@ -5,7 +5,7 @@
 // 잠긴 동안의 시도는 Supabase 까지 가지 않고 기록도 하지 않으므로 잠금이 늘어나지 않는다.
 
 export const MAX_FAILURES = 5
-export const WINDOW_MS = 15 * 60 * 1000
+export const WINDOW_MS = 3 * 60 * 1000
 
 export type LoginLimitState =
   | { locked: false; remaining: number }
