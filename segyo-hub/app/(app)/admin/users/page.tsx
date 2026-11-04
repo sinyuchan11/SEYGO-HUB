@@ -40,7 +40,7 @@ export default async function AdminUsersPage() {
 
   return (
     <div>
-      <header className="flex items-start justify-between gap-2 border-b border-border bg-surface px-4 py-3">
+      <header className="flex flex-wrap items-start justify-between gap-2 border-b border-border bg-surface px-4 py-3">
         <div>
           <h2 className="font-bold">사용자 관리</h2>
           <p className="text-xs text-muted-fg">
@@ -49,7 +49,7 @@ export default async function AdminUsersPage() {
               : '모더는 권한 변경 권한이 제한될 수 있어요 (관리자만 admin 지정 가능).'}
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Link
             href="/admin/reports"
             className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted"
@@ -62,6 +62,14 @@ export default async function AdminUsersPage() {
               className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted"
             >
               금지어 관리
+            </Link>
+          )}
+          {me.role === 'admin' && (
+            <Link
+              href="/admin/anon-lookups"
+              className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted"
+            >
+              익명 조회 기록
             </Link>
           )}
         </div>

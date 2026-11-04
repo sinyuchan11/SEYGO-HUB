@@ -85,6 +85,7 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
     createdAt: post.created_at,
     isMine: post.is_mine,
     canEdit: post.board === 'free' || post.board === 'qna',
+    isAdmin: me?.role === 'admin',
     canModerate: canModerate({ role: (me?.role ?? 'pending') as UserRole, timeout_until: me?.timeout_until ?? null }),
     initialPostLiked,
     initialPostLikeCount,

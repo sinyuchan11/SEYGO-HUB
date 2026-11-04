@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/DropdownMenu'
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/Dialog'
 import { ReportDialog } from '@/components/report/ReportDialog'
+import { RevealAuthorDialog } from '@/components/admin/RevealAuthorDialog'
 import { timeAgo } from '@/lib/time'
 import { checkContainsProfanity } from '@/lib/profanity'
 import {
@@ -37,6 +38,8 @@ export type PostDetailData = {
   /** 자유/질문 글만 글쓰기 폼으로 고칠 수 있다 (공지 게시판 레거시 글 제외). */
   canEdit: boolean
   canModerate: boolean
+  /** admin 만 익명 작성자 확인 메뉴를 본다. 실제 권한 검사는 DB 함수가 한다. */
+  isAdmin: boolean
   initialPostLiked: boolean
   initialPostLikeCount: number
   commentLikeMap: Record<number, { liked: boolean; count: number }>
@@ -55,6 +58,7 @@ export function PostDetail({ data }: { data: PostDetailData }) {
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [reportOpen, setReportOpen] = useState(false)
+  const [revealTarget, setRevealTarget] = useState<{ type: 'post' | 'comment'; id: number } | null>(null)
 
   // 댓글 수정/삭제
   const [editingId, setEditingId] = useState<number | null>(null)
@@ -276,6 +280,11 @@ export function PostDetail({ data }: { data: PostDetailData }) {
               {!data.isMine && (
                 <DropdownMenuItem onSelect={() => setReportOpen(true)}>신고</DropdownMenuItem>
               )}
+              {data.isAdmin && data.isAnonymous && (
+                <DropdownMenuItem onSelect={() => setRevealTarget({ type: 'post', id: data.id })}>
+                  작성자 확인
+                </DropdownMenuItem>
+              )}
               {(data.isMine || data.canModerate) && (
                 <DropdownMenuItem
                   onSelect={() => setDeleteOpen(true)}
@@ -356,6 +365,14 @@ export function PostDetail({ data }: { data: PostDetailData }) {
         targetType="post"
         targetId={data.id}
       />
+      {revealTarget && (
+        <RevealAuthorDialog
+          open
+          onOpenChange={(o) => !o && setRevealTarget(null)}
+          targetType={revealTarget.type}
+          targetId={revealTarget.id}
+        />
+      )}
 
       {commentActionError && (
         <p className="border-b border-border bg-danger/10 px-4 py-2 text-sm text-danger">
@@ -421,6 +438,14 @@ export function PostDetail({ data }: { data: PostDetailData }) {
                   className="font-medium text-muted-fg hover:text-foreground"
                 >
                   수정
+                </button>
+              )}
+              {data.isAdmin && c.isAnonymous && (
+                <button
+                  onClick={() => setRevealTarget({ type: 'comment', id: c.id })}
+                  className="font-medium text-muted-fg hover:text-foreground"
+                >
+                  작성자 확인
                 </button>
               )}
               {(c.isMine || data.canModerate) && (
