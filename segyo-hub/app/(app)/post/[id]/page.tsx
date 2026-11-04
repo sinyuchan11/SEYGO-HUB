@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { PostDetail, type PostDetailData } from '@/components/post/PostDetail'
 import { canModerate, type UserRole } from '@/lib/permissions'
 import { fetchMentionMembers } from '@/lib/members'
+import { sanitizePostHtml } from '@/lib/sanitizePost'
 
 export default async function PostPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -77,7 +78,7 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
   const data: PostDetailData = {
     id: post.id,
     title: post.title,
-    content: post.content,
+    content: sanitizePostHtml(post.content),
     authorId: post.author_id,
     authorNickname: post.author_nickname,
     isAnonymous: post.is_anonymous,

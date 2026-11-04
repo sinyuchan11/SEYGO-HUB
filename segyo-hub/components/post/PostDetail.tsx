@@ -23,11 +23,11 @@ import {
   type MentionMember,
 } from '@/lib/mentions'
 import { MentionSuggestions } from '@/components/mention/MentionSuggestions'
-import DOMPurify from 'isomorphic-dompurify'
 
 export type PostDetailData = {
   id: number
   title: string
+  /** 서버에서 sanitizePostHtml 로 정리된 HTML. 여기서 다시 정리하지 않는다. */
   content: string
   authorId: string | null  // 익명 글이면 null — 서버가 비워서 준다
   authorNickname: string | null
@@ -77,10 +77,8 @@ export function PostDetail({ data }: { data: PostDetailData }) {
 
   const body = useMemo(
     () =>
-      linkifyMentionsHtml(
-        DOMPurify.sanitize(data.content, { USE_PROFILES: { html: true } }),
-        data.members
-      ),
+      // data.content 는 서버(page.tsx)에서 sanitizePostHtml 로 정리된 HTML 이다.
+      linkifyMentionsHtml(data.content, data.members),
     [data.content, data.members]
   )
 
